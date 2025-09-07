@@ -7,6 +7,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
     const navigation = [
         { name: 'Dashboard', href: route('admin.dashboard'), icon: '📊' },
+        { name: 'Categories', href: route('admin.categories.index'), icon: '📁', permission: 'view_categories' },
+        { name: 'Products', href: route('admin.products.index'), icon: '📦', permission: 'view_products' },
         { name: 'Users', href: route('admin.users.index'), icon: '👥', permission: 'view_users' },
         // Future navigation items will be added here
     ];

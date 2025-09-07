@@ -55,6 +55,63 @@ export interface PaginatedData<T> {
     total: number;
 }
 
+export interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
+    icon?: string;
+    parent_id?: number;
+    is_active: boolean;
+    sort_order: number;
+    created_at: string;
+    updated_at: string;
+    parent?: Category;
+    children?: Category[];
+    products_count?: number;
+}
+
+export interface ProductImage {
+    id: number;
+    product_id: number;
+    image_path: string;
+    alt_text?: string;
+    sort_order: number;
+    is_primary: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Product {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
+    short_description?: string;
+    sku: string;
+    category_id: number;
+    price: number;
+    sale_price?: number;
+    weight?: number;
+    dimensions?: any;
+    specifications?: Record<string, any>;
+    manage_stock: boolean;
+    stock_quantity: number;
+    allow_backorders: boolean;
+    stock_status: string;
+    featured: boolean;
+    is_active: boolean;
+    status: string;
+    main_image?: string;
+    gallery_images?: string[];
+    meta_title?: string;
+    meta_description?: string;
+    created_at: string;
+    updated_at: string;
+    category?: Category;
+    images?: ProductImage[];
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
