@@ -107,6 +107,10 @@ This SRS outlines the functionality and design of the Sanatoni Mart e-commerce p
 
 * The website will be fully responsive, ensuring a seamless experience across desktops, tablets, and smartphones.
 
+### 2.16 **Newsletter management**
+
+* the website will support a complete newsletter management, including managing newsletter subscriptions, sending newsletter emails etc. the users can subscribe and unsubscibe from newsletter both from email or website. a mail verification is needed during unsubscribing from the site.
+
 ## 3. **Non-Functional Requirements**
 
 ### 3.1 **Performance**
