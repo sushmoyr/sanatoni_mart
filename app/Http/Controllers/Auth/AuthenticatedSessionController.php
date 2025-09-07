@@ -33,6 +33,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Update last login information
+        $user = Auth::user();
+        $user->updateLastLogin($request->ip());
+
+        // Redirect based on user role
+        if ($user->hasAdminAccess()) {
+            return redirect()->intended(route('admin.dashboard', absolute: false));
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

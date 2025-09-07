@@ -15,6 +15,13 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    $user = auth()->user();
+    
+    // Redirect admin/manager users to admin dashboard
+    if ($user && $user->hasAdminAccess()) {
+        return redirect()->route('admin.dashboard');
+    }
+    
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -25,3 +32,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+require __DIR__.'/admin.php';
