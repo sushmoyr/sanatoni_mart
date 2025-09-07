@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { User } from '@/types';
+import FlashMessages from '@/Components/FlashMessages';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const { auth } = usePage().props as { auth: { user: User } };
@@ -9,6 +10,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         { name: 'Dashboard', href: route('admin.dashboard'), icon: '📊' },
         { name: 'Categories', href: route('admin.categories.index'), icon: '📁', permission: 'view_categories' },
         { name: 'Products', href: route('admin.products.index'), icon: '📦', permission: 'view_products' },
+        { name: 'Reports', href: route('admin.reports.inventory'), icon: '📈', permission: 'view_products' },
         { name: 'Users', href: route('admin.users.index'), icon: '👥', permission: 'view_users' },
         // Future navigation items will be added here
     ];
@@ -25,6 +27,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
     return (
         <div className="min-h-screen bg-gray-100">
+            <FlashMessages />
+            
             {/* Navigation */}
             <nav className="bg-white shadow-sm border-b">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

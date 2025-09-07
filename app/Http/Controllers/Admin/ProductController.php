@@ -10,23 +10,91 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of products
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $products = Product::with(['category'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = Product::with(['category', 'images']);
 
-        $categories = Category::active()->orderBy('name')->get();
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        // Category filter
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->get('category'));
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+
+        // Stock status filter
+        if ($request->filled('stock_status')) {
+            $stockStatus = $request->get('stock_status');
+            switch ($stockStatus) {
+                case 'in_stock':
+                    $query->where(function ($q) {
+                        $q->where('manage_stock', false)
+                          ->orWhere(function ($q2) {
+                              $q2->where('manage_stock', true)
+                                 ->where('stock_quantity', '>', 5);
+                          });
+                    });
+                    break;
+                case 'low_stock':
+                    $query->where('manage_stock', true)
+                          ->whereBetween('stock_quantity', [1, 5]);
+                    break;
+                case 'out_of_stock':
+                    $query->where('manage_stock', true)
+                          ->where('stock_quantity', '<=', 0);
+                    break;
+            }
+        }
+
+        // Price range filter
+        if ($request->filled('price_min')) {
+            $query->where('price', '>=', $request->get('price_min'));
+        }
+        if ($request->filled('price_max')) {
+            $query->where('price', '<=', $request->get('price_max'));
+        }
+
+        // Only show active products
+        $query->where('is_active', true);
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDirection = $request->get('sort_direction', 'desc');
+        
+        $allowedSortFields = ['created_at', 'name', 'price', 'stock_quantity', 'updated_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $products = $query->paginate(10)->withQueryString();
+        $categories = Category::where('active', true)->orderBy('name')->get();
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'categories' => $categories,
+            'filters' => $request->only(['search', 'category', 'status', 'stock_status', 'price_min', 'price_max', 'sort_by', 'sort_direction']),
         ]);
     }
 
@@ -167,5 +235,121 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product deleted successfully.');
+    }
+
+    /**
+     * Upload image for a product
+     */
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
+            'product_id' => 'required|exists:products,id',
+            'alt_text' => 'nullable|string|max:255',
+            'is_primary' => 'nullable'
+        ]);
+
+        $product = Product::findOrFail($request->product_id);
+        
+        // Check current image count before making changes
+        $currentImageCount = $product->images()->count();
+        
+        // Handle file upload
+        $image = $request->file('image');
+        $filename = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+        $path = $image->storeAs('products', $filename, 'public');
+
+        // If this is set as primary, unset other primary images
+        if ($request->boolean('is_primary')) {
+            $product->images()->update(['is_main' => false]);
+        }
+
+        // Determine if this should be primary (either explicitly set or first image)
+        $isPrimary = $request->boolean('is_primary') || $currentImageCount === 0;
+        
+        // Get next sort order
+        $nextSortOrder = $product->images()->max('sort_order') ?? 0;
+        $nextSortOrder += 1;
+
+        // Create image record
+        $productImage = $product->images()->create([
+            'image_path' => $path,
+            'alt_text' => $request->alt_text,
+            'is_main' => $isPrimary,
+            'sort_order' => $nextSortOrder,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'image' => [
+                'id' => $productImage->id,
+                'image_path' => $productImage->image_path,
+                'alt_text' => $productImage->alt_text,
+                'is_primary' => $productImage->is_main,
+                'sort_order' => $productImage->sort_order,
+                'url' => Storage::url($productImage->image_path),
+            ]
+        ]);
+    }
+
+    /**
+     * Delete product image
+     */
+    public function deleteImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image_id' => 'required|exists:product_images,id',
+        ]);
+
+        $image = \App\Models\ProductImage::findOrFail($request->image_id);
+        
+        // Delete file from storage
+        if (Storage::disk('public')->exists($image->image_path)) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+
+        $image->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Update image details
+     */
+    public function updateImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image_id' => 'required|exists:product_images,id',
+            'alt_text' => 'nullable|string|max:255',
+            'is_primary' => 'boolean',
+            'sort_order' => 'integer|min:0'
+        ]);
+
+        $image = \App\Models\ProductImage::findOrFail($request->image_id);
+        
+        // If setting as primary, unset other primary images for this product
+        if ($request->boolean('is_primary')) {
+            $image->product->images()->where('id', '!=', $image->id)->update(['is_main' => false]);
+        }
+
+        // Map is_primary to is_main for the update
+        $updateData = $request->only(['alt_text', 'sort_order']);
+        if ($request->has('is_primary')) {
+            $updateData['is_main'] = $request->boolean('is_primary');
+        }
+        
+        $image->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'image' => [
+                'id' => $image->id,
+                'image_path' => $image->image_path,
+                'alt_text' => $image->alt_text,
+                'is_primary' => $image->is_main,
+                'sort_order' => $image->sort_order,
+                'url' => Storage::url($image->image_path),
+            ]
+        ]);
     }
 }

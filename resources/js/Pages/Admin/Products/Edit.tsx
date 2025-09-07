@@ -8,6 +8,7 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import ImageUpload from '@/Components/ImageUpload';
 import { useState } from 'react';
 
 interface EditProps extends PageProps {
@@ -20,6 +21,7 @@ export default function Edit({ auth, ziggy, product, categories }: EditProps) {
     const [specifications, setSpecifications] = useState<Record<string, string>>(
         product.specifications || {}
     );
+    const [images, setImages] = useState<any[]>(product.images || []);
 
     const { data, setData, put, processing, errors } = useForm({
         name: product.name,
@@ -356,6 +358,24 @@ export default function Edit({ auth, ziggy, product, categories }: EditProps) {
                                         </label>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Product Images */}
+                        <div className="bg-white overflow-hidden shadow rounded-lg">
+                            <div className="px-4 py-5 sm:p-6">
+                                <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                                    Product Images
+                                </h3>
+                                <ImageUpload
+                                    productId={product.id}
+                                    images={images}
+                                    onImagesChange={setImages}
+                                    maxImages={10}
+                                />
+                                <p className="mt-2 text-sm text-gray-500">
+                                    Upload or manage product images. Click on an image to set it as primary.
+                                </p>
                             </div>
                         </div>
 
