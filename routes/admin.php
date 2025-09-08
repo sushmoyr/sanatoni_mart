@@ -7,6 +7,9 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ShippingZoneController;
+use App\Http\Controllers\Admin\FlashSaleController;
+use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\NewsletterController;
 use Illuminate\Support\Facades\Route;
 
 // Admin routes - requires authentication and admin/manager roles
@@ -43,6 +46,24 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
     Route::resource('shipping-zones', ShippingZoneController::class);
     Route::post('shipping-zones/{shippingZone}/toggle-status', [ShippingZoneController::class, 'toggleStatus'])->name('shipping-zones.toggle-status');
     Route::post('shipping-zones/test-area', [ShippingZoneController::class, 'testArea'])->name('shipping-zones.test-area');
+    
+    // Flash Sales Management - Admin and Manager
+    Route::resource('flash-sales', FlashSaleController::class);
+    Route::post('flash-sales/{flashSale}/toggle-status', [FlashSaleController::class, 'toggleStatus'])->name('flash-sales.toggle-status');
+    Route::get('flash-sales/active/api', [FlashSaleController::class, 'getActive'])->name('flash-sales.active');
+    
+    // Coupon Management - Admin and Manager
+    Route::resource('coupons', CouponController::class);
+    Route::post('coupons/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('coupons.toggle-status');
+    Route::post('coupons/validate', [CouponController::class, 'validateCoupon'])->name('coupons.validate');
+    Route::get('coupons/generate-code', [CouponController::class, 'generateCode'])->name('coupons.generate-code');
+    
+    // Newsletter Management - Admin and Manager
+    Route::resource('newsletters', NewsletterController::class);
+    Route::post('newsletters/{newsletter}/send-now', [NewsletterController::class, 'sendNow'])->name('newsletters.send-now');
+    Route::post('newsletters/{newsletter}/duplicate', [NewsletterController::class, 'duplicate'])->name('newsletters.duplicate');
+    Route::get('newsletters/{newsletter}/preview', [NewsletterController::class, 'preview'])->name('newsletters.preview');
+    Route::get('newsletters/analytics/subscribers', [NewsletterController::class, 'subscriberAnalytics'])->name('newsletters.subscriber-analytics');
     
     // User Management - Admin only
     Route::middleware('role:admin')->group(function () {
