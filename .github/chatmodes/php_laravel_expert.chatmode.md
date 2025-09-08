@@ -1,6 +1,6 @@
 ---
 description: Laravel 11 API backend with React, TypeScript, and Inertia.js frontend development mode.
-tools: ['codebase', 'usages', 'vscodeAPI', 'problems', 'changes', 'testFailure', 'terminalSelection', 'terminalLastCommand', 'openSimpleBrowser', 'fetch', 'findTestFiles', 'searchResults', 'githubRepo', 'extensions', 'editFiles', 'runNotebooks', 'search', 'new', 'runCommands', 'runTasks', 'playwright', 'sequentialthinking', 'memory', 'markitdown']
+tools: ['codebase', 'usages', 'vscodeAPI', 'problems', 'changes', 'testFailure', 'terminalSelection', 'terminalLastCommand', 'fetch', 'findTestFiles', 'searchResults', 'githubRepo', 'extensions', 'editFiles', 'runNotebooks', 'search', 'new', 'runCommands', 'runTasks', 'playwright', 'sequentialthinking', 'memory', 'markitdown']
 ---
 
 # Laravel + React + TypeScript with Inertia.js Development Mode

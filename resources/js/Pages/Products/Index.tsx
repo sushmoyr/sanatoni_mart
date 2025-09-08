@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import StoreLayout from '@/Layouts/StoreLayout';
+import BrandedStoreLayout from '@/Layouts/BrandedStoreLayout';
 import { Product, Category, PageProps } from '@/types';
+import { ProductCard, Input, Button, Badge, Card } from '@/Components/ui';
+import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 interface ProductsIndexProps extends PageProps {
     products: {
@@ -47,43 +49,79 @@ export default function ProductsIndex({ auth, products, categories = [], filters
     const productsList = products?.data || [];
 
     return (
-        <StoreLayout title="Products" description="Discover our collection of religious products">
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <BrandedStoreLayout title="Products" description="Discover our collection of sacred products">
+            <div className="py-8">
+                <div className="container-custom">
                     {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-                        <p className="mt-2 text-gray-600">
-                            Discover our collection of religious products
+                    <div className="mb-8 text-center">
+                        <h1 className="text-4xl font-serif font-bold text-semantic-text mb-4">
+                            Sacred Products
+                        </h1>
+                        <p className="text-semantic-textSub max-w-2xl mx-auto leading-relaxed">
+                            Discover our curated collection of authentic religious products, 
+                            handcrafted with devotion and blessed with sanctity.
                         </p>
                     </div>
 
-                    {/* Simple Search */}
-                    <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-                        <div className="flex gap-4">
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Search products..."
-                                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            />
-                            <button
-                                onClick={handleFilter}
-                                className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700"
-                            >
-                                Search
-                            </button>
-                            {(searchTerm || selectedCategory || minPrice || maxPrice) && (
-                                <button
-                                    onClick={clearFilters}
-                                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-                                >
-                                    Clear
-                                </button>
+                    {/* Search & Filter */}
+                    <Card className="mb-8 p-6">
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1">
+                                <Input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                                    placeholder="Search sacred items..."
+                                    leftIcon={<MagnifyingGlassIcon className="h-5 w-5" />}
+                                />
+                            </div>
+                            
+                            {categories.length > 0 && (
+                                <div className="min-w-0 md:w-48">
+                                    <select
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="w-full rounded-md border-semantic-border text-sm focus:border-brand-500 focus:ring-brand-500"
+                                    >
+                                        <option value="">All Categories</option>
+                                        {categories.map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                            
+                            <div className="flex gap-2">
+                                <Button onClick={handleFilter}>
+                                    <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
+                                    Search
+                                </Button>
+                                {(searchTerm || selectedCategory || minPrice || maxPrice) && (
+                                    <Button variant="tertiary" onClick={clearFilters}>
+                                        Clear
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Active Filters */}
+                    {(searchTerm || selectedCategory) && (
+                        <div className="mb-6 flex flex-wrap gap-2">
+                            {searchTerm && (
+                                <Badge variant="secondary">
+                                    Search: "{searchTerm}"
+                                </Badge>
+                            )}
+                            {selectedCategory && categories.find(c => c.id.toString() === selectedCategory) && (
+                                <Badge variant="secondary">
+                                    Category: {categories.find(c => c.id.toString() === selectedCategory)?.name}
+                                </Badge>
                             )}
                         </div>
-                    </div>
+                    )}
 
                     {/* Products Grid */}
                     {productsList.length > 0 ? (
@@ -93,29 +131,40 @@ export default function ProductsIndex({ auth, products, categories = [], filters
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12">
-                            <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Try adjusting your search to find what you're looking for.
+                        <div className="text-center py-16">
+                            <div className="mx-auto h-12 w-12 text-semantic-textSub mb-4">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-12 w-12">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-serif font-medium text-semantic-text mb-2">
+                                No sacred items found
+                            </h3>
+                            <p className="text-semantic-textSub mb-6 max-w-md mx-auto">
+                                We couldn't find any products matching your search. 
+                                Try adjusting your filters or browse our categories.
                             </p>
+                            <Button variant="secondary" onClick={clearFilters}>
+                                View All Products
+                            </Button>
                         </div>
                     )}
 
-                    {/* Simple Pagination */}
+                    {/* Pagination */}
                     {products?.links && products.links.length > 3 && (
-                        <div className="mt-8 flex justify-center">
-                            <div className="flex space-x-2">
+                        <div className="mt-12 flex justify-center">
+                            <div className="flex space-x-1">
                                 {products.links.map((link, index) => (
                                     <button
                                         key={index}
                                         onClick={() => link.url && router.get(link.url)}
                                         disabled={!link.url}
-                                        className={`px-3 py-2 rounded-md text-sm font-medium ${
+                                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                                             link.active
-                                                ? 'bg-indigo-600 text-white'
+                                                ? 'bg-brand-500 text-white shadow-e1'
                                                 : link.url
-                                                ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                ? 'bg-white text-semantic-text border border-semantic-border hover:bg-brand-50 hover:text-brand-700'
+                                                : 'bg-neutral-100 text-semantic-textSub cursor-not-allowed'
                                         }`}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                     />
@@ -125,39 +174,6 @@ export default function ProductsIndex({ auth, products, categories = [], filters
                     )}
                 </div>
             </div>
-        </StoreLayout>
-    );
-}
-
-// Product Card Component
-function ProductCard({ product }: { product: Product }) {
-    return (
-        <div className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
-            <Link href={route('products.show', product.id)} className="block">
-                <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg">
-                    <img
-                        src={product.main_image || '/images/placeholder.jpg'}
-                        alt={product.name}
-                        className="h-48 w-full object-cover object-center"
-                    />
-                </div>
-                <div className="p-4">
-                    <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-                        {product.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                        {product.short_description}
-                    </p>
-                    <div className="mt-2 flex items-center justify-between">
-                        <p className="text-lg font-medium text-gray-900">
-                            ৳{product.price}
-                        </p>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {product.category?.name}
-                        </span>
-                    </div>
-                </div>
-            </Link>
-        </div>
+        </BrandedStoreLayout>
     );
 }

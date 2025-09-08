@@ -68,7 +68,7 @@ export default function Show({ auth, ziggy, product }: ShowProps) {
                                                 alt={image.alt_text || product.name}
                                                 className="w-full h-48 object-cover rounded"
                                             />
-                                            {image.is_primary && (
+                                            {image.is_main && (
                                                 <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mt-2">
                                                     Primary
                                                 </span>

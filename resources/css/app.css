@@ -1,3 +1,302 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Design System CSS Variables */
+:root {
+  /* Light mode semantic tokens */
+  --bg: #FAF9F7;          /* neutral-50 */
+  --surface: #FBF8F1;     /* brand-50 */
+  --elevate: #FFFFFF;
+  --primary: #C99B3F;     /* brand-500 */
+  --accent: #8B5CF6;      /* accent-500 */
+  --text: #1F1B18;        /* neutral-900 */
+  --text-sub: #5C5144;    /* neutral-700 */
+  --text-muted: #9A9084;  /* neutral-500 */
+  --border: #E8E3DA;      /* neutral-200 */
+  --ring: #8B5CF6;        /* accent-500 */
+  
+  /* Elevation shadows */
+  --e1: 0 1px 1px rgba(0,0,0,0.04);
+  --e2: 0 4px 12px rgba(0,0,0,0.08);
+  --e3: 0 12px 32px rgba(0,0,0,0.18);
+  
+  /* Spacing scale */
+  --space: 16px; /* cozy default */
+  
+  /* Border radius */
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+/* Dark mode semantic tokens */
+.dark {
+  --bg: #1F1B18;          /* neutral-900 */
+  --surface: #3D362F;     /* neutral-800 */
+  --elevate: #2A241F;
+  --primary: #DDB974;     /* brand-400 for better contrast */
+  --accent: #B58CE7;      /* accent-400 */
+  --text: #FDFCF9;
+  --text-sub: #B8B09E;
+  --border: #5C5144;
+  --ring: #B58CE7;
+}
+
+/* Density variations */
+:root[data-density="compact"] { 
+  --space: 12px; 
+}
+
+:root[data-density="comfortable"] { 
+  --space: 20px; 
+}
+
+/* Corner style variations */
+:root[data-corner="arch"] {
+  --radius-md: 12px;
+  --radius-lg: 18px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-semantic-bg text-semantic-text antialiased;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+  
+  /* Typography scale */
+  h1 {
+    @apply text-display font-serif font-bold tracking-tight text-semantic-text;
+  }
+  
+  h2 {
+    @apply text-heading font-serif font-semibold tracking-tight text-semantic-text;
+  }
+  
+  h3 {
+    @apply text-subheading font-serif font-medium text-semantic-text;
+  }
+  
+  p {
+    @apply text-body-m text-semantic-text;
+  }
+  
+  /* Focus styles */
+  :focus-visible {
+    @apply outline-none ring-2 ring-semantic-ring ring-offset-2 ring-offset-semantic-surface;
+  }
+  
+  /* Selection styles */
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+  
+  .dark ::selection {
+    @apply bg-brand-700 text-brand-100;
+  }
+}
+
+@layer components {
+  /* Container */
+  .container-custom {
+    @apply max-w-container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Sacred geometry background */
+  .sacred-bg {
+    position: relative;
+  }
+  
+  .sacred-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle, rgba(201, 155, 63, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Line clamp utilities */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+}
+
+@layer utilities {
+  /* Responsive text utilities */
+  .text-responsive {
+    font-size: clamp(14px, 2vw, 16px);
+  }
+  
+  /* Backdrop blur support */
+  .backdrop-blur-support {
+    backdrop-filter: blur(8px);
+  }
+  
+  @supports not (backdrop-filter: blur(8px)) {
+    .backdrop-blur-support {
+      @apply bg-white/95;
+    }
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .motion-safe\:animate-none {
+      animation: none;
+    }
+    
+    .motion-safe\:transition-none {
+      transition: none;
+    }
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    @apply text-black bg-white;
+  }
+}
+
+/* Sacred Geometry & Cultural Patterns */
+.sacred-bg {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(201, 155, 63, 0.1) 0%, transparent 30%),
+    radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.1) 0%, transparent 30%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 35px,
+      rgba(201, 155, 63, 0.03) 35px,
+      rgba(201, 155, 63, 0.03) 70px
+    );
+}
+
+.sacred-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c99b3f' fill-opacity='0.05'%3E%3Cpath d='M30 0l15 30-15 30L15 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.lotus-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c99b3f' fill-opacity='0.08' fill-rule='evenodd'%3E%3Cpath d='M40 0c8.837 0 16 7.163 16 16s-7.163 16-16 16-16-7.163-16-16S31.163 0 40 0zm0 8c-4.418 0-8 3.582-8 8s3.582 8 8 8 8-3.582 8-8-3.582-8-8-8z'/%3E%3Cpath d='M40 32c8.837 0 16 7.163 16 16s-7.163 16-16 16-16-7.163-16-16 7.163-16 16-16zm0 8c-4.418 0-8 3.582-8 8s3.582 8 8 8 8-3.582 8-8-3.582-8-8-8z'/%3E%3Cpath d='M40 64c8.837 0 16 7.163 16 16s-7.163 16-16 16-16-7.163-16-16 7.163-16 16-16zm0 8c-4.418 0-8 3.582-8 8s3.582 8 8 8 8-3.582 8-8-3.582-8-8-8z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.mandala-bg {
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%238b5cf6' fill-opacity='0.06'%3E%3Cpath d='M50 50m-40 0a40 40 0 1 1 80 0a40 40 0 1 1 -80 0'/%3E%3Cpath d='M50 50m-30 0a30 30 0 1 1 60 0a30 30 0 1 1 -60 0'/%3E%3Cpath d='M50 50m-20 0a20 20 0 1 1 40 0a20 20 0 1 1 -40 0'/%3E%3Cpath d='M50 50m-10 0a10 10 0 1 1 20 0a10 10 0 1 1 -20 0'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.temple-arch {
+  clip-path: polygon(
+    0 100%,
+    0 20%,
+    10% 10%,
+    20% 5%,
+    30% 2%,
+    40% 1%,
+    50% 0,
+    60% 1%,
+    70% 2%,
+    80% 5%,
+    90% 10%,
+    100% 20%,
+    100% 100%
+  );
+}
+
+.divine-glow {
+  box-shadow: 
+    0 0 20px rgba(201, 155, 63, 0.2),
+    0 0 40px rgba(201, 155, 63, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.sacred-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(201, 155, 63, 0.1) 0%,
+    rgba(139, 92, 246, 0.1) 50%,
+    rgba(201, 155, 63, 0.1) 100%
+  );
+}
+
+/* Cultural Pattern Animations */
+@keyframes divine-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes sacred-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(201, 155, 63, 0.2);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(201, 155, 63, 0.4);
+  }
+}
+
+.animate-divine-pulse {
+  animation: divine-pulse 3s ease-in-out infinite;
+}
+
+.animate-sacred-glow {
+  animation: sacred-glow 2s ease-in-out infinite;
+}
+
+/* Om Symbol Patterns */
+.om-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c99b3f' fill-opacity='0.04'%3E%3Ctext x='60' y='70' font-family='serif' font-size='60' text-anchor='middle'%3E🕉%3C/text%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Devotional Borders */
+.devotional-border {
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, #c99b3f, #8b5cf6, #c99b3f) border-box;
+}
+
+.devotional-border-gold {
+  border: 1px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, #c99b3f, #f4d03f, #c99b3f) border-box;
+}
