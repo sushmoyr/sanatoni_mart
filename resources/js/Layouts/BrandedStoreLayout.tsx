@@ -5,6 +5,8 @@ import { HeaderNavigation } from '@/Components/ui/HeaderNavigation';
 import { Button } from '@/Components/ui/Button';
 import { Badge } from '@/Components/ui/Badge';
 import { Input } from '@/Components/ui/Input';
+import { Avatar } from '@/Components/ui/Avatar';
+import Dropdown from '@/Components/Dropdown';
 import { cn } from '@/lib/utils';
 import {
     ShoppingCartIcon,
@@ -136,45 +138,47 @@ export default function BrandedStoreLayout({ children, title = 'Sanatoni Mart', 
 
                                 {/* User Menu */}
                                 {auth.user ? (
-                                    <Dropdown
-                                        align="right"
-                                        trigger={
-                                            <DropdownTrigger showChevron={false}>
-                                                <div className="flex items-center space-x-2 p-2 text-semantic-textSub hover:text-semantic-text hover:bg-brand-50 rounded-md transition-colors cursor-pointer">
-                                                    <Avatar 
-                                                        name={auth.user.name} 
-                                                        size="sm"
-                                                    />
-                                                    <span className="hidden lg:block text-sm font-medium">
-                                                        {auth.user.name}
-                                                    </span>
+                                    <Dropdown>
+                                        <Dropdown.Trigger>
+                                            <div className="flex items-center space-x-2 p-2 text-semantic-textSub hover:text-semantic-text hover:bg-brand-50 rounded-md transition-colors cursor-pointer">
+                                                <Avatar 
+                                                    name={auth.user.name} 
+                                                    size="sm"
+                                                />
+                                                <span className="hidden lg:block text-sm font-medium">
+                                                    {auth.user.name}
+                                                </span>
+                                            </div>
+                                        </Dropdown.Trigger>
+
+                                        <Dropdown.Content align="right">
+                                            <Dropdown.Link href="/profile">
+                                                <div className="flex items-center space-x-2">
+                                                    <UserCircleIcon className="h-4 w-4" />
+                                                    <span>My Profile</span>
                                                 </div>
-                                            </DropdownTrigger>
-                                        }
-                                        items={[
-                                            {
-                                                label: 'My Profile',
-                                                href: '/profile',
-                                                icon: <UserCircleIcon className="h-4 w-4" />
-                                            },
-                                            {
-                                                label: 'My Orders',
-                                                href: '/orders',
-                                                icon: <ShoppingCartIcon className="h-4 w-4" />
-                                            },
-                                            {
-                                                label: 'Settings',
-                                                href: '/settings',
-                                                icon: <Cog6ToothIcon className="h-4 w-4" />
-                                            },
-                                            { separator: true },
-                                            {
-                                                label: 'Sign Out',
-                                                href: '/logout',
-                                                icon: <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                                            }
-                                        ]}
-                                    />
+                                            </Dropdown.Link>
+                                            <Dropdown.Link href="/orders">
+                                                <div className="flex items-center space-x-2">
+                                                    <ShoppingCartIcon className="h-4 w-4" />
+                                                    <span>My Orders</span>
+                                                </div>
+                                            </Dropdown.Link>
+                                            <Dropdown.Link href="/settings">
+                                                <div className="flex items-center space-x-2">
+                                                    <Cog6ToothIcon className="h-4 w-4" />
+                                                    <span>Settings</span>
+                                                </div>
+                                            </Dropdown.Link>
+                                            <hr className="my-1 border-gray-200" />
+                                            <Dropdown.Link href="/logout" method="post">
+                                                <div className="flex items-center space-x-2">
+                                                    <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                                                    <span>Sign Out</span>
+                                                </div>
+                                            </Dropdown.Link>
+                                        </Dropdown.Content>
+                                    </Dropdown>
                                 ) : (
                                     <div className="flex items-center space-x-2">
                                         <Button variant="tertiary" size="sm" asChild>

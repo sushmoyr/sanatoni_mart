@@ -67,3 +67,5 @@ Use this mode for tasks such as:
 Always ensure to follow best practices and maintain high standards of code quality throughout the development process. 
 
 keep track of milestones and deliverables in the `/docs/milestones` directory.
+
+Run the playwright tools from the playwright mcp server to validate end to end functionality after every changes

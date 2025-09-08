@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { Product, Category } from '@/types';
+import { Product, Category, PageProps } from '@/types';
+import { Card, Button, Badge, Input } from '@/Components/ui';
+import { 
+    PlusIcon,
+    EyeIcon,
+    PencilIcon,
+    TrashIcon,
+    MagnifyingGlassIcon,
+    FunnelIcon,
+    PhotoIcon,
+    CurrencyDollarIcon,
+    ArchiveBoxIcon
+} from '@heroicons/react/24/outline';
 
-interface PaginatedProducts {
-    data: Product[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    links: Array<{
-        url: string | null;
-        label: string;
-        active: boolean;
-    }>;
-}
-
-interface Props {
-    products: PaginatedProducts;
+interface ProductsIndexProps extends PageProps {
+    products: {
+        data: Product[];
+        links: any[];
+        meta: any;
+    };
     categories: Category[];
     filters: {
         search?: string;
@@ -31,54 +34,35 @@ interface Props {
     };
 }
 
-export default function Index({ products, categories, filters: initialFilters }: Props) {
-    const [filters, setFilters] = useState({
-        search: initialFilters?.search || '',
-        category: initialFilters?.category || '',
-        status: initialFilters?.status || '',
-        stock_status: initialFilters?.stock_status || '',
-        price_min: initialFilters?.price_min || '',
-        price_max: initialFilters?.price_max || '',
-        sort_by: initialFilters?.sort_by || 'created_at',
-        sort_direction: initialFilters?.sort_direction || 'desc'
-    });
-
+export default function Index({ auth, products, categories = [], filters = {} }: ProductsIndexProps) {
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const [selectedCategory, setSelectedCategory] = useState(filters.category || '');
+    const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
+    const [selectedStockStatus, setSelectedStockStatus] = useState(filters.stock_status || '');
+    const [minPrice, setMinPrice] = useState(filters.price_min || '');
+    const [maxPrice, setMaxPrice] = useState(filters.price_max || '');
     const [showFilters, setShowFilters] = useState(false);
 
-    const applyFilters = () => {
-        const cleanFilters = Object.fromEntries(
-            Object.entries(filters).filter(([_, value]) => value !== '')
-        );
-        
-        router.get(route('admin.products.index'), cleanFilters, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        });
+    const handleFilter = () => {
+        const filterData: any = {};
+        if (searchTerm) filterData.search = searchTerm;
+        if (selectedCategory) filterData.category = selectedCategory;
+        if (selectedStatus) filterData.status = selectedStatus;
+        if (selectedStockStatus) filterData.stock_status = selectedStockStatus;
+        if (minPrice) filterData.price_min = minPrice;
+        if (maxPrice) filterData.price_max = maxPrice;
+
+        router.get(route('admin.products.index'), filterData, { preserveState: true });
     };
 
-    const resetFilters = () => {
-        setFilters({
-            search: '',
-            category: '',
-            status: '',
-            stock_status: '',
-            price_min: '',
-            price_max: '',
-            sort_by: 'created_at',
-            sort_direction: 'desc'
-        });
-        router.get(route('admin.products.index'), {}, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        });
-    };
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-        }).format(price);
+    const clearFilters = () => {
+        setSearchTerm('');
+        setSelectedCategory('');
+        setSelectedStatus('');
+        setSelectedStockStatus('');
+        setMinPrice('');
+        setMaxPrice('');
+        router.get(route('admin.products.index'));
     };
 
     const handleDelete = (product: Product) => {
@@ -95,389 +79,346 @@ export default function Index({ products, categories, filters: initialFilters }:
         }
     };
 
-    const getStatusBadge = (status: string, isActive: boolean) => {
-        if (!isActive) {
-            return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>;
+    const getStockStatusBadge = (product: Product) => {
+        if (!product.manage_stock) {
+            return <Badge variant="secondary">Unlimited</Badge>;
         }
-        
-        switch (status) {
-            case 'published':
-                return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Published</span>;
-            case 'draft':
-                return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Draft</span>;
-            case 'archived':
-                return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Archived</span>;
-            default:
-                return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{status}</span>;
+
+        const quantity = product.stock_quantity || 0;
+        if (quantity <= 0) {
+            return <Badge variant="danger">Out of Stock</Badge>;
+        } else if (quantity <= 5) {
+            return <Badge variant="warning">Low Stock</Badge>;
+        } else {
+            return <Badge variant="success">In Stock</Badge>;
         }
     };
 
-    const getStockStatus = (product: Product) => {
-        if (!product.manage_stock) {
-            return <span className="text-green-600">∞ Unlimited</span>;
-        }
-        
-        if (product.stock_quantity <= 0) {
-            return <span className="text-red-600">Out of Stock</span>;
-        } else if (product.stock_quantity <= 5) {
-            return <span className="text-yellow-600">Low Stock ({product.stock_quantity})</span>;
-        } else {
-            return <span className="text-green-600">In Stock ({product.stock_quantity})</span>;
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'active':
+                return <Badge variant="success">Active</Badge>;
+            case 'inactive':
+                return <Badge variant="secondary">Inactive</Badge>;
+            case 'draft':
+                return <Badge variant="warning">Draft</Badge>;
+            default:
+                return <Badge variant="secondary">{status}</Badge>;
         }
     };
+
+    const productsList = products?.data || [];
 
     return (
         <AdminLayout>
-            <Head title="Products" />
+            <Head title="Products Management" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            <div className="flex justify-between items-center mb-6">
-                                <h1 className="text-2xl font-semibold text-gray-900">Products</h1>
-                                <div className="flex space-x-3">
-                                    <button
-                                        onClick={() => setShowFilters(!showFilters)}
-                                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded flex items-center"
-                                    >
-                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
-                                        </svg>
-                                        Filters
-                                    </button>
-                                    <Link
-                                        href={route('admin.products.create')}
-                                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                    >
-                                        Add Product
-                                    </Link>
-                                </div>
-                            </div>
-
-                            {/* Search and Filter Section */}
-                            <div className="mb-6">
-                                {/* Search Bar */}
-                                <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                                    <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            placeholder="Search products..."
-                                            value={filters.search}
-                                            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                                            onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        />
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={applyFilters}
-                                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
-                                        >
-                                            Search
-                                        </button>
-                                        <button
-                                            onClick={resetFilters}
-                                            className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md"
-                                        >
-                                            Reset
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Advanced Filters */}
-                                {showFilters && (
-                                    <div className="bg-gray-50 p-4 rounded-lg">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                            {/* Category Filter */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                                                <select
-                                                    value={filters.category}
-                                                    onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                >
-                                                    <option value="">All Categories</option>
-                                                    {categories.map((category) => (
-                                                        <option key={category.id} value={category.id}>
-                                                            {category.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            {/* Status Filter */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                                <select
-                                                    value={filters.status}
-                                                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                >
-                                                    <option value="">All Status</option>
-                                                    <option value="published">Published</option>
-                                                    <option value="draft">Draft</option>
-                                                    <option value="archived">Archived</option>
-                                                </select>
-                                            </div>
-
-                                            {/* Stock Status Filter */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
-                                                <select
-                                                    value={filters.stock_status}
-                                                    onChange={(e) => setFilters({ ...filters, stock_status: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                >
-                                                    <option value="">All Stock</option>
-                                                    <option value="in_stock">In Stock</option>
-                                                    <option value="low_stock">Low Stock</option>
-                                                    <option value="out_of_stock">Out of Stock</option>
-                                                </select>
-                                            </div>
-
-                                            {/* Sort By */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-                                                <select
-                                                    value={`${filters.sort_by}-${filters.sort_direction}`}
-                                                    onChange={(e) => {
-                                                        const [sort_by, sort_direction] = e.target.value.split('-');
-                                                        setFilters({ ...filters, sort_by, sort_direction });
-                                                    }}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                >
-                                                    <option value="created_at-desc">Newest First</option>
-                                                    <option value="created_at-asc">Oldest First</option>
-                                                    <option value="name-asc">Name A-Z</option>
-                                                    <option value="name-desc">Name Z-A</option>
-                                                    <option value="price-asc">Price Low-High</option>
-                                                    <option value="price-desc">Price High-Low</option>
-                                                    <option value="stock_quantity-asc">Stock Low-High</option>
-                                                    <option value="stock_quantity-desc">Stock High-Low</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {/* Price Range */}
-                                        <div className="mt-4">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="number"
-                                                    placeholder="Min Price"
-                                                    value={filters.price_min}
-                                                    onChange={(e) => setFilters({ ...filters, price_min: e.target.value })}
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                />
-                                                <span className="self-center text-gray-500">to</span>
-                                                <input
-                                                    type="number"
-                                                    placeholder="Max Price"
-                                                    value={filters.price_max}
-                                                    onChange={(e) => setFilters({ ...filters, price_max: e.target.value })}
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-4 flex justify-end">
-                                            <button
-                                                onClick={applyFilters}
-                                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md"
-                                            >
-                                                Apply Filters
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Products Table */}
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Product
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Category
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Price
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Stock
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {products.data.map((product) => (
-                                            <tr key={product.id}>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center">
-                                                        <div className="flex-shrink-0 h-12 w-12">
-                                                            {product.main_image ? (
-                                                                <img
-                                                                    className="h-12 w-12 rounded-md object-cover"
-                                                                    src={`/storage/${product.main_image}`}
-                                                                    alt={product.name}
-                                                                />
-                                                            ) : (
-                                                                <div className="h-12 w-12 rounded-md bg-gray-200 flex items-center justify-center">
-                                                                    <span className="text-gray-400 text-xs">No Image</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="ml-4">
-                                                            <div className="text-sm font-medium text-gray-900">
-                                                                {product.name}
-                                                            </div>
-                                                            <div className="text-sm text-gray-500">
-                                                                SKU: {product.sku}
-                                                            </div>
-                                                            {product.featured && (
-                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                                    ⭐ Featured
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {product.category?.name || 'Uncategorized'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    <div>
-                                                        {product.sale_price ? (
-                                                            <>
-                                                                <span className="line-through text-gray-500">
-                                                                    {formatPrice(product.price)}
-                                                                </span>
-                                                                <br />
-                                                                <span className="text-red-600 font-semibold">
-                                                                    {formatPrice(product.sale_price)}
-                                                                </span>
-                                                            </>
-                                                        ) : (
-                                                            <span className="font-semibold">
-                                                                {formatPrice(product.price)}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    {getStockStatus(product)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {getStatusBadge(product.status, product.is_active)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                    <Link
-                                                        href={route('admin.products.show', product.id)}
-                                                        className="text-blue-600 hover:text-blue-900 mr-4"
-                                                    >
-                                                        View
-                                                    </Link>
-                                                    <Link
-                                                        href={route('admin.products.edit', product.id)}
-                                                        className="text-indigo-600 hover:text-indigo-900 mr-4"
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                    <button
-                                                        className="text-red-600 hover:text-red-900"
-                                                        onClick={() => handleDelete(product)}
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Pagination */}
-                            {products.last_page > 1 && (
-                                <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-6">
-                                    <div className="flex flex-1 justify-between sm:hidden">
-                                        {products.links[0]?.url && (
-                                            <Link
-                                                href={products.links[0].url}
-                                                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                            >
-                                                Previous
-                                            </Link>
-                                        )}
-                                        {products.links[products.links.length - 1]?.url && (
-                                            <Link
-                                                href={products.links[products.links.length - 1].url!}
-                                                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                            >
-                                                Next
-                                            </Link>
-                                        )}
-                                    </div>
-                                    <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                                        <div>
-                                            <p className="text-sm text-gray-700">
-                                                Showing{' '}
-                                                <span className="font-medium">
-                                                    {(products.current_page - 1) * products.per_page + 1}
-                                                </span>{' '}
-                                                to{' '}
-                                                <span className="font-medium">
-                                                    {Math.min(products.current_page * products.per_page, products.total)}
-                                                </span>{' '}
-                                                of <span className="font-medium">{products.total}</span> results
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm">
-                                                {products.links.map((link, index) => (
-                                                    <Link
-                                                        key={index}
-                                                        href={link.url || '#'}
-                                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                                                            link.active
-                                                                ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
-                                                                : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0'
-                                                        } ${
-                                                            index === 0 ? 'rounded-l-md' : ''
-                                                        } ${
-                                                            index === products.links.length - 1 ? 'rounded-r-md' : ''
-                                                        }`}
-                                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                                    />
-                                                ))}
-                                            </nav>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {products.data.length === 0 && (
-                                <div className="text-center py-12">
-                                    <p className="text-gray-500 text-lg">No products found.</p>
-                                    <Link
-                                        href={route('admin.products.create')}
-                                        className="mt-4 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                    >
-                                        Create your first product
-                                    </Link>
-                                </div>
-                            )}
+            <div className="container-custom py-8">
+                {/* Header */}
+                <div className="mb-8">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h1 className="text-3xl font-serif font-bold text-semantic-text mb-2">
+                                Sacred Products
+                            </h1>
+                            <p className="text-semantic-textSub">
+                                Manage your spiritual products inventory
+                            </p>
                         </div>
+                        <Button asChild>
+                            <Link href={route('admin.products.create')}>
+                                <PlusIcon className="w-4 h-4 mr-2" />
+                                Add Product
+                            </Link>
+                        </Button>
                     </div>
                 </div>
+
+                {/* Search and Filter Controls */}
+                <Card className="mb-6">
+                    <div className="p-6">
+                        <div className="flex flex-col lg:flex-row gap-4">
+                            {/* Search */}
+                            <div className="flex-1">
+                                <div className="relative">
+                                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-semantic-textSub" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Search products by name, description, or SKU..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-10"
+                                        onKeyPress={(e) => e.key === 'Enter' && handleFilter()}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Filter Toggle */}
+                            <Button 
+                                variant="secondary" 
+                                onClick={() => setShowFilters(!showFilters)}
+                            >
+                                <FunnelIcon className="w-4 h-4 mr-2" />
+                                Filters
+                            </Button>
+
+                            {/* Search Button */}
+                            <Button onClick={handleFilter}>
+                                Search
+                            </Button>
+                        </div>
+
+                        {/* Advanced Filters */}
+                        {showFilters && (
+                            <div className="mt-6 pt-6 border-t border-semantic-border">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {/* Category Filter */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Category
+                                        </label>
+                                        <select
+                                            value={selectedCategory}
+                                            onChange={(e) => setSelectedCategory(e.target.value)}
+                                            className="w-full px-3 py-2 border border-semantic-border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                        >
+                                            <option value="">All Categories</option>
+                                            {categories.map((category) => (
+                                                <option key={category.id} value={category.id}>
+                                                    {category.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Status Filter */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Status
+                                        </label>
+                                        <select
+                                            value={selectedStatus}
+                                            onChange={(e) => setSelectedStatus(e.target.value)}
+                                            className="w-full px-3 py-2 border border-semantic-border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                        >
+                                            <option value="">All Status</option>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="draft">Draft</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Stock Status Filter */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Stock Status
+                                        </label>
+                                        <select
+                                            value={selectedStockStatus}
+                                            onChange={(e) => setSelectedStockStatus(e.target.value)}
+                                            className="w-full px-3 py-2 border border-semantic-border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                        >
+                                            <option value="">All Stock</option>
+                                            <option value="in_stock">In Stock</option>
+                                            <option value="low_stock">Low Stock</option>
+                                            <option value="out_of_stock">Out of Stock</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Price Range */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Price Range
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                type="number"
+                                                placeholder="Min"
+                                                value={minPrice}
+                                                onChange={(e) => setMinPrice(e.target.value)}
+                                                className="text-sm"
+                                            />
+                                            <Input
+                                                type="number"
+                                                placeholder="Max"
+                                                value={maxPrice}
+                                                onChange={(e) => setMaxPrice(e.target.value)}
+                                                className="text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2 mt-4">
+                                    <Button onClick={handleFilter} size="sm">
+                                        Apply Filters
+                                    </Button>
+                                    <Button 
+                                        variant="secondary" 
+                                        onClick={clearFilters}
+                                        size="sm"
+                                    >
+                                        Clear All
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </Card>
+
+                {/* Products Grid */}
+                {productsList.length > 0 ? (
+                    <div className="grid gap-6">
+                        {productsList.map((product) => (
+                            <Card key={product.id} className="overflow-hidden">
+                                <div className="p-6">
+                                    <div className="flex flex-col lg:flex-row gap-6">
+                                        {/* Product Image */}
+                                        <div className="flex-shrink-0">
+                                            <div className="w-24 h-24 lg:w-32 lg:h-32 bg-brand-50 rounded-lg flex items-center justify-center overflow-hidden">
+                                                {product.images && product.images.length > 0 ? (
+                                                    <img
+                                                        src={product.images[0].image_path}
+                                                        alt={product.images[0].alt_text || product.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <PhotoIcon className="w-8 h-8 text-semantic-textSub" />
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Product Details */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-semantic-text mb-1">
+                                                        {product.name}
+                                                    </h3>
+                                                    <p className="text-sm text-semantic-textSub mb-2">
+                                                        SKU: {product.sku}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {getStatusBadge(product.status)}
+                                                    {getStockStatusBadge(product)}
+                                                </div>
+                                            </div>
+
+                                            <p className="text-semantic-textSub text-sm mb-3 line-clamp-2">
+                                                {product.description}
+                                            </p>
+
+                                            <div className="flex flex-wrap items-center gap-4 text-sm text-semantic-textSub mb-4">
+                                                <div className="flex items-center gap-1">
+                                                    <CurrencyDollarIcon className="w-4 h-4" />
+                                                    <span className="font-medium text-semantic-text">
+                                                        ৳{parseFloat(product.price.toString()).toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                
+                                                {product.manage_stock && (
+                                                    <div className="flex items-center gap-1">
+                                                        <ArchiveBoxIcon className="w-4 h-4" />
+                                                        <span>Stock: {product.stock_quantity}</span>
+                                                    </div>
+                                                )}
+
+                                                {product.category && (
+                                                    <div className="flex items-center gap-1">
+                                                        <span>Category: {product.category.name}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="flex gap-2">
+                                                <Button 
+                                                    variant="secondary" 
+                                                    size="sm" 
+                                                    asChild
+                                                >
+                                                    <Link href={route('admin.products.show', product.id)}>
+                                                        <EyeIcon className="w-4 h-4 mr-1" />
+                                                        View
+                                                    </Link>
+                                                </Button>
+                                                
+                                                <Button 
+                                                    variant="secondary" 
+                                                    size="sm" 
+                                                    asChild
+                                                >
+                                                    <Link href={route('admin.products.edit', product.id)}>
+                                                        <PencilIcon className="w-4 h-4 mr-1" />
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                                
+                                                <Button 
+                                                    variant="destructive" 
+                                                    size="sm"
+                                                    onClick={() => handleDelete(product)}
+                                                >
+                                                    <TrashIcon className="w-4 h-4 mr-1" />
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                ) : (
+                    <Card>
+                        <div className="p-12 text-center">
+                            <PhotoIcon className="mx-auto w-16 h-16 text-semantic-textSub mb-4" />
+                            <h3 className="text-lg font-medium text-semantic-text mb-2">
+                                No products found
+                            </h3>
+                            <p className="text-semantic-textSub mb-6">
+                                {Object.keys(filters).length > 0 
+                                    ? "No products match your current filters. Try adjusting your search criteria."
+                                    : "Get started by adding your first product to the inventory."
+                                }
+                            </p>
+                            <div className="flex gap-2 justify-center">
+                                {Object.keys(filters).length > 0 && (
+                                    <Button variant="secondary" onClick={clearFilters}>
+                                        Clear Filters
+                                    </Button>
+                                )}
+                                <Button asChild>
+                                    <Link href={route('admin.products.create')}>
+                                        <PlusIcon className="w-4 h-4 mr-2" />
+                                        Add First Product
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                )}
+
+                {/* Pagination */}
+                {products.links && products.links.length > 3 && (
+                    <div className="mt-8 flex justify-center">
+                        <div className="flex gap-2">
+                            {products.links.map((link: any, index: number) => (
+                                <Button
+                                    key={index}
+                                    variant={link.active ? "primary" : "secondary"}
+                                    size="sm"
+                                    onClick={() => link.url && router.get(link.url)}
+                                    disabled={!link.url}
+                                    className="px-3 py-1"
+                                >
+                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </AdminLayout>
     );

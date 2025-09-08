@@ -2,12 +2,16 @@ import React, { FormEventHandler, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Category } from '@/types';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
-import ImageUpload from '@/Components/ImageUpload';
+import { Card, Button, Input, Badge } from '@/Components/ui';
+import { 
+    ArrowLeftIcon,
+    CubeIcon,
+    PhotoIcon,
+    PlusIcon,
+    XMarkIcon,
+    TagIcon,
+    CurrencyDollarIcon
+} from '@heroicons/react/24/outline';
 
 interface Props {
     categories: Category[];
@@ -75,108 +79,146 @@ export default function Create({ categories }: Props) {
         <AdminLayout>
             <Head title="Create Product" />
 
-            <div className="py-12">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            <div className="flex justify-between items-center mb-6">
-                                <h1 className="text-2xl font-semibold text-gray-900">Create Product</h1>
-                                <Link
-                                    href={route('admin.products.index')}
-                                    className="text-gray-600 hover:text-gray-900"
-                                >
-                                    ← Back to Products
-                                </Link>
-                            </div>
+            <div className="container-custom py-8">
+                {/* Header */}
+                <div className="mb-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-serif font-bold text-semantic-text mb-2">
+                                Create Sacred Product
+                            </h1>
+                            <p className="text-semantic-textSub">
+                                Add a new spiritual product to your inventory
+                            </p>
+                        </div>
+                        <Button variant="secondary" asChild>
+                            <Link href={route('admin.products.index')}>
+                                <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                                Back to Products
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
 
-                            <form onSubmit={submit} className="space-y-6">
-                                {/* Basic Information */}
+                <div className="max-w-4xl">
+                    <form onSubmit={submit} className="space-y-8">
+                        {/* Basic Information */}
+                        <Card className="devotional-border">
+                            <div className="p-6">
+                                <h3 className="text-lg font-serif font-medium text-semantic-text mb-6 flex items-center">
+                                    <CubeIcon className="h-5 w-5 mr-2 text-brand-600" />
+                                    Basic Information
+                                </h3>
+                                
                                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                     <div className="sm:col-span-2">
-                                        <InputLabel htmlFor="name" value="Product Name" />
-                                        <TextInput
-                                            id="name"
-                                            name="name"
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Product Name *
+                                        </label>
+                                        <Input
+                                            type="text"
                                             value={data.name}
-                                            className="mt-1 block w-full"
-                                            isFocused={true}
-                                            onChange={(e) => setData('name', e.target.value)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('name', e.target.value)}
+                                            placeholder="Enter sacred product name..."
                                             required
+                                            leftIcon={<TagIcon className="h-4 w-4" />}
                                         />
-                                        <InputError message={errors.name} className="mt-2" />
+                                        {errors.name && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.name}</p>
+                                        )}
                                     </div>
 
                                     <div className="sm:col-span-2">
-                                        <InputLabel htmlFor="short_description" value="Short Description" />
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Short Description
+                                        </label>
                                         <textarea
-                                            id="short_description"
-                                            name="short_description"
                                             value={data.short_description}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            rows={2}
                                             onChange={(e) => setData('short_description', e.target.value)}
-                                            placeholder="Brief product description for listings"
+                                            className="w-full px-3 py-2 border border-semantic-border rounded-md shadow-e1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white text-semantic-text"
+                                            rows={2}
+                                            placeholder="Brief product description for listings..."
                                         />
-                                        <InputError message={errors.short_description} className="mt-2" />
+                                        {errors.short_description && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.short_description}</p>
+                                        )}
                                     </div>
 
                                     <div className="sm:col-span-2">
-                                        <InputLabel htmlFor="description" value="Description" />
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Full Description *
+                                        </label>
                                         <textarea
-                                            id="description"
-                                            name="description"
                                             value={data.description}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            rows={4}
                                             onChange={(e) => setData('description', e.target.value)}
+                                            className="w-full px-3 py-2 border border-semantic-border rounded-md shadow-e1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white text-semantic-text"
+                                            rows={4}
+                                            placeholder="Detailed product description..."
                                             required
                                         />
-                                        <InputError message={errors.description} className="mt-2" />
+                                        {errors.description && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.description}</p>
+                                        )}
                                     </div>
                                 </div>
+                            </div>
+                        </Card>
 
-                                {/* Pricing */}
+                        {/* Pricing */}
+                        <Card className="devotional-border">
+                            <div className="p-6">
+                                <h3 className="text-lg font-serif font-medium text-semantic-text mb-6 flex items-center">
+                                    <CurrencyDollarIcon className="h-5 w-5 mr-2 text-brand-600" />
+                                    Pricing
+                                </h3>
+                                
                                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                                     <div>
-                                        <InputLabel htmlFor="price" value="Regular Price (₹)" />
-                                        <TextInput
-                                            id="price"
-                                            name="price"
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Regular Price (৳) *
+                                        </label>
+                                        <Input
                                             type="number"
                                             step="0.01"
                                             min="0"
                                             value={data.price}
-                                            className="mt-1 block w-full"
-                                            onChange={(e) => setData('price', e.target.value)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('price', e.target.value)}
+                                            placeholder="0.00"
                                             required
                                         />
-                                        <InputError message={errors.price} className="mt-2" />
+                                        {errors.price && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.price}</p>
+                                        )}
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="sale_price" value="Sale Price (₹)" />
-                                        <TextInput
-                                            id="sale_price"
-                                            name="sale_price"
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Sale Price (৳)
+                                        </label>
+                                        <Input
                                             type="number"
                                             step="0.01"
                                             min="0"
                                             value={data.sale_price}
-                                            className="mt-1 block w-full"
-                                            onChange={(e) => setData('sale_price', e.target.value)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('sale_price', e.target.value)}
+                                            placeholder="0.00"
                                         />
-                                        <InputError message={errors.sale_price} className="mt-2" />
-                                        <p className="mt-1 text-sm text-gray-500">Optional. Must be less than regular price.</p>
+                                        {errors.sale_price && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.sale_price}</p>
+                                        )}
+                                        <p className="mt-1 text-sm text-semantic-textSub">
+                                            Optional. Must be less than regular price.
+                                        </p>
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="category_id" value="Category" />
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Category *
+                                        </label>
                                         <select
-                                            id="category_id"
-                                            name="category_id"
                                             value={data.category_id}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                             onChange={(e) => setData('category_id', e.target.value)}
+                                            className="w-full px-3 py-2 border border-semantic-border rounded-md shadow-e1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white text-semantic-text"
                                             required
                                         >
                                             <option value="">Select Category</option>
@@ -186,264 +228,296 @@ export default function Create({ categories }: Props) {
                                                 </option>
                                             ))}
                                         </select>
-                                        <InputError message={errors.category_id} className="mt-2" />
+                                        {errors.category_id && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.category_id}</p>
+                                        )}
                                     </div>
                                 </div>
+                            </div>
+                        </Card>
 
-                                {/* Inventory Management */}
-                                <div className="border-t pt-6">
-                                    <h3 className="text-lg font-medium text-gray-900 mb-4">Inventory Management</h3>
-                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                                        <div className="sm:col-span-3">
+                        {/* Inventory Management */}
+                        <Card className="devotional-border">
+                            <div className="p-6">
+                                <h3 className="text-lg font-serif font-medium text-semantic-text mb-6">
+                                    Inventory Management
+                                </h3>
+                                
+                                <div className="space-y-6">
+                                    <div>
+                                        <div className="flex items-center">
+                                            <input
+                                                id="manage_stock"
+                                                type="checkbox"
+                                                checked={data.manage_stock}
+                                                onChange={(e) => setData('manage_stock', e.target.checked)}
+                                                className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-semantic-border rounded"
+                                            />
+                                            <label htmlFor="manage_stock" className="ml-2 text-sm font-medium text-semantic-text">
+                                                Track Stock Quantity
+                                            </label>
+                                        </div>
+                                        <p className="mt-1 text-sm text-semantic-textSub">
+                                            Uncheck for unlimited stock items (like digital products or fresh flowers)
+                                        </p>
+                                    </div>
+
+                                    {data.manage_stock && (
+                                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                            <div>
+                                                <label className="block text-sm font-medium text-semantic-text mb-2">
+                                                    Stock Quantity
+                                                </label>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.stock_quantity.toString()}
+                                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('stock_quantity', parseInt(e.target.value) || 0)}
+                                                    placeholder="0"
+                                                />
+                                                {errors.stock_quantity && (
+                                                    <p className="mt-2 text-sm text-danger-600">{errors.stock_quantity}</p>
+                                                )}
+                                            </div>
+
                                             <div className="flex items-center">
                                                 <input
-                                                    id="manage_stock"
-                                                    name="manage_stock"
+                                                    id="allow_backorders"
                                                     type="checkbox"
-                                                    checked={data.manage_stock}
-                                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                                    onChange={(e) => setData('manage_stock', e.target.checked)}
+                                                    checked={data.allow_backorders}
+                                                    onChange={(e) => setData('allow_backorders', e.target.checked)}
+                                                    className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-semantic-border rounded"
                                                 />
-                                                <InputLabel
-                                                    htmlFor="manage_stock"
-                                                    value="Track Stock Quantity"
-                                                    className="ml-2"
-                                                />
-                                            </div>
-                                            <p className="mt-1 text-sm text-gray-500">
-                                                Uncheck for unlimited stock items (like digital products or fresh flowers)
-                                            </p>
-                                        </div>
-
-                                        {data.manage_stock && (
-                                            <>
-                                                <div>
-                                                    <InputLabel htmlFor="stock_quantity" value="Stock Quantity" />
-                                                    <TextInput
-                                                        id="stock_quantity"
-                                                        name="stock_quantity"
-                                                        type="number"
-                                                        min="0"
-                                                        value={data.stock_quantity.toString()}
-                                                        className="mt-1 block w-full"
-                                                        onChange={(e) => setData('stock_quantity', parseInt(e.target.value) || 0)}
-                                                    />
-                                                    <InputError message={errors.stock_quantity} className="mt-2" />
-                                                </div>
-
-                                                <div className="sm:col-span-2">
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            id="allow_backorders"
-                                                            name="allow_backorders"
-                                                            type="checkbox"
-                                                            checked={data.allow_backorders}
-                                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                                            onChange={(e) => setData('allow_backorders', e.target.checked)}
-                                                        />
-                                                        <InputLabel
-                                                            htmlFor="allow_backorders"
-                                                            value="Allow Backorders"
-                                                            className="ml-2"
-                                                        />
-                                                    </div>
-                                                    <p className="mt-1 text-sm text-gray-500">
+                                                <div className="ml-2">
+                                                    <label htmlFor="allow_backorders" className="text-sm font-medium text-semantic-text">
+                                                        Allow Backorders
+                                                    </label>
+                                                    <p className="text-sm text-semantic-textSub">
                                                         Allow customers to order when out of stock
                                                     </p>
                                                 </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Product Details */}
-                                <div className="border-t pt-6">
-                                    <h3 className="text-lg font-medium text-gray-900 mb-4">Product Details</h3>
-                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                        <div>
-                                            <InputLabel htmlFor="weight" value="Weight (kg)" />
-                                            <TextInput
-                                                id="weight"
-                                                name="weight"
-                                                type="number"
-                                                step="0.001"
-                                                min="0"
-                                                value={data.weight}
-                                                className="mt-1 block w-full"
-                                                onChange={(e) => setData('weight', e.target.value)}
-                                            />
-                                            <InputError message={errors.weight} className="mt-2" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Specifications */}
-                                <div className="border-t pt-6">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-medium text-gray-900">Specifications</h3>
-                                        <button
-                                            type="button"
-                                            onClick={addSpecification}
-                                            className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded"
-                                        >
-                                            + Add Specification
-                                        </button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        {Object.entries(data.specifications).map(([key, value]) => (
-                                            <div key={key} className="flex items-center space-x-3">
-                                                <div className="flex-1">
-                                                    <label className="block text-sm font-medium text-gray-700">
-                                                        {key}
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={value}
-                                                        onChange={(e) => updateSpecification(key, e.target.value)}
-                                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                        placeholder={`Enter ${key.toLowerCase()}`}
-                                                    />
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeSpecification(key)}
-                                                    className="text-red-600 hover:text-red-800 text-sm mt-6"
-                                                >
-                                                    Remove
-                                                </button>
                                             </div>
-                                        ))}
-                                        {Object.keys(data.specifications).length === 0 && (
-                                            <p className="text-gray-500 text-sm">
-                                                No specifications added. Click "Add Specification" to add product details like material, color, size, etc.
-                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Product Details */}
+                        <Card className="devotional-border">
+                            <div className="p-6">
+                                <h3 className="text-lg font-serif font-medium text-semantic-text mb-6">
+                                    Product Details
+                                </h3>
+                                
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                    <div>
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Weight (kg)
+                                        </label>
+                                        <Input
+                                            type="number"
+                                            step="0.001"
+                                            min="0"
+                                            value={data.weight}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('weight', e.target.value)}
+                                            placeholder="0.000"
+                                        />
+                                        {errors.weight && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.weight}</p>
                                         )}
                                     </div>
                                 </div>
+                            </div>
+                        </Card>
 
-                                {/* Status and Settings */}
-                                <div className="border-t pt-6">
-                                    <h3 className="text-lg font-medium text-gray-900 mb-4">Status & Settings</h3>
-                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                                        <div>
-                                            <InputLabel htmlFor="status" value="Status" />
-                                            <select
-                                                id="status"
-                                                name="status"
-                                                value={data.status}
-                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                onChange={(e) => setData('status', e.target.value)}
+                        {/* Specifications */}
+                        <Card className="devotional-border">
+                            <div className="p-6">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-lg font-serif font-medium text-semantic-text">
+                                        Specifications
+                                    </h3>
+                                    <Button type="button" variant="secondary" size="sm" onClick={addSpecification}>
+                                        <PlusIcon className="h-4 w-4 mr-2" />
+                                        Add Specification
+                                    </Button>
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    {Object.entries(data.specifications).map(([key, value]) => (
+                                        <div key={key} className="flex items-start space-x-3">
+                                            <div className="flex-1">
+                                                <label className="block text-sm font-medium text-semantic-text mb-2">
+                                                    {key}
+                                                </label>
+                                                <Input
+                                                    type="text"
+                                                    value={value}
+                                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateSpecification(key, e.target.value)}
+                                                    placeholder={`Enter ${key.toLowerCase()}`}
+                                                />
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => removeSpecification(key)}
+                                                className="text-danger-600 hover:text-danger-700 hover:bg-danger-50 mt-7"
                                             >
-                                                <option value="draft">Draft</option>
-                                                <option value="published">Published</option>
-                                                <option value="archived">Archived</option>
-                                            </select>
-                                            <InputError message={errors.status} className="mt-2" />
+                                                <XMarkIcon className="h-4 w-4" />
+                                            </Button>
                                         </div>
+                                    ))}
+                                    {Object.keys(data.specifications).length === 0 && (
+                                        <p className="text-semantic-textSub text-sm">
+                                            No specifications added. Click "Add Specification" to add product details like material, color, size, etc.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </Card>
 
-                                        <div>
-                                            <div className="flex items-center mt-6">
-                                                <input
-                                                    id="is_active"
-                                                    name="is_active"
-                                                    type="checkbox"
-                                                    checked={data.is_active}
-                                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                                    onChange={(e) => setData('is_active', e.target.checked)}
-                                                />
-                                                <InputLabel
-                                                    htmlFor="is_active"
-                                                    value="Active"
-                                                    className="ml-2"
-                                                />
-                                            </div>
-                                            <p className="mt-1 text-sm text-gray-500">
-                                                Only active products are shown to customers
-                                            </p>
-                                        </div>
+                        {/* Status and Settings */}
+                        <Card className="devotional-border">
+                            <div className="p-6">
+                                <h3 className="text-lg font-serif font-medium text-semantic-text mb-6">
+                                    Status & Settings
+                                </h3>
+                                
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                                    <div>
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Status
+                                        </label>
+                                        <select
+                                            value={data.status}
+                                            onChange={(e) => setData('status', e.target.value)}
+                                            className="w-full px-3 py-2 border border-semantic-border rounded-md shadow-e1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white text-semantic-text"
+                                        >
+                                            <option value="draft">Draft</option>
+                                            <option value="published">Published</option>
+                                            <option value="archived">Archived</option>
+                                        </select>
+                                        {errors.status && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.status}</p>
+                                        )}
+                                    </div>
 
-                                        <div>
-                                            <div className="flex items-center mt-6">
-                                                <input
-                                                    id="featured"
-                                                    name="featured"
-                                                    type="checkbox"
-                                                    checked={data.featured}
-                                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                                    onChange={(e) => setData('featured', e.target.checked)}
-                                                />
-                                                <InputLabel
-                                                    htmlFor="featured"
-                                                    value="Featured Product"
-                                                    className="ml-2"
-                                                />
-                                            </div>
-                                            <p className="mt-1 text-sm text-gray-500">
-                                                Featured products appear prominently on the homepage
-                                            </p>
+                                    <div>
+                                        <div className="flex items-center mt-6">
+                                            <input
+                                                id="is_active"
+                                                type="checkbox"
+                                                checked={data.is_active}
+                                                onChange={(e) => setData('is_active', e.target.checked)}
+                                                className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-semantic-border rounded"
+                                            />
+                                            <label htmlFor="is_active" className="ml-2 text-sm font-medium text-semantic-text">
+                                                Active
+                                            </label>
                                         </div>
+                                        <p className="mt-1 text-sm text-semantic-textSub">
+                                            Only active products are shown to customers
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center mt-6">
+                                            <input
+                                                id="featured"
+                                                type="checkbox"
+                                                checked={data.featured}
+                                                onChange={(e) => setData('featured', e.target.checked)}
+                                                className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-semantic-border rounded"
+                                            />
+                                            <label htmlFor="featured" className="ml-2 text-sm font-medium text-semantic-text">
+                                                Featured Product
+                                            </label>
+                                        </div>
+                                        <p className="mt-1 text-sm text-semantic-textSub">
+                                            Featured products appear prominently on the homepage
+                                        </p>
                                     </div>
                                 </div>
+                            </div>
+                        </Card>
 
-                                {/* Product Images */}
-                                <div className="border-t pt-6">
-                                    <h3 className="text-lg font-medium text-gray-900 mb-4">Product Images</h3>
-                                    <ImageUpload
-                                        images={images}
-                                        onImagesChange={setImages}
-                                        maxImages={10}
-                                    />
-                                    <p className="mt-2 text-sm text-gray-500">
-                                        Upload product images. The first image will be used as the primary image.
+                        {/* Product Images */}
+                        <Card className="devotional-border">
+                            <div className="p-6">
+                                <h3 className="text-lg font-serif font-medium text-semantic-text mb-6 flex items-center">
+                                    <PhotoIcon className="h-5 w-5 mr-2 text-brand-600" />
+                                    Product Images
+                                </h3>
+                                
+                                <div className="border-2 border-dashed border-semantic-border rounded-lg p-6 text-center">
+                                    <PhotoIcon className="h-12 w-12 text-semantic-textSub mx-auto mb-4" />
+                                    <p className="text-semantic-text font-medium mb-2">Upload Sacred Product Images</p>
+                                    <p className="text-semantic-textSub text-sm">
+                                        Drag and drop images here, or click to select files
+                                    </p>
+                                    <p className="text-semantic-textSub text-xs mt-2">
+                                        Upload up to 10 images. The first image will be used as the primary image.
                                     </p>
                                 </div>
+                            </div>
+                        </Card>
 
-                                {/* SEO */}
-                                <div className="border-t pt-6">
-                                    <h3 className="text-lg font-medium text-gray-900 mb-4">SEO Settings</h3>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <InputLabel htmlFor="meta_title" value="Meta Title" />
-                                            <TextInput
-                                                id="meta_title"
-                                                name="meta_title"
-                                                value={data.meta_title}
-                                                className="mt-1 block w-full"
-                                                onChange={(e) => setData('meta_title', e.target.value)}
-                                                placeholder="Leave blank to use product name"
-                                            />
-                                            <InputError message={errors.meta_title} className="mt-2" />
-                                        </div>
+                        {/* SEO Settings */}
+                        <Card className="devotional-border">
+                            <div className="p-6">
+                                <h3 className="text-lg font-serif font-medium text-semantic-text mb-6">
+                                    SEO Settings
+                                </h3>
+                                
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Meta Title
+                                        </label>
+                                        <Input
+                                            type="text"
+                                            value={data.meta_title}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('meta_title', e.target.value)}
+                                            placeholder="Leave blank to use product name"
+                                        />
+                                        {errors.meta_title && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.meta_title}</p>
+                                        )}
+                                    </div>
 
-                                        <div>
-                                            <InputLabel htmlFor="meta_description" value="Meta Description" />
-                                            <textarea
-                                                id="meta_description"
-                                                name="meta_description"
-                                                value={data.meta_description}
-                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                rows={3}
-                                                onChange={(e) => setData('meta_description', e.target.value)}
-                                                placeholder="Leave blank to use short description"
-                                            />
-                                            <InputError message={errors.meta_description} className="mt-2" />
-                                        </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-semantic-text mb-2">
+                                            Meta Description
+                                        </label>
+                                        <textarea
+                                            value={data.meta_description}
+                                            onChange={(e) => setData('meta_description', e.target.value)}
+                                            className="w-full px-3 py-2 border border-semantic-border rounded-md shadow-e1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white text-semantic-text"
+                                            rows={3}
+                                            placeholder="Leave blank to use short description"
+                                        />
+                                        {errors.meta_description && (
+                                            <p className="mt-2 text-sm text-danger-600">{errors.meta_description}</p>
+                                        )}
                                     </div>
                                 </div>
+                            </div>
+                        </Card>
 
-                                <div className="flex items-center justify-end space-x-4 pt-6 border-t">
-                                    <SecondaryButton>
-                                        <Link href={route('admin.products.index')}>
-                                            Cancel
-                                        </Link>
-                                    </SecondaryButton>
-                                    <PrimaryButton disabled={processing}>
-                                        {processing ? 'Creating...' : 'Create Product'}
-                                    </PrimaryButton>
-                                </div>
-                            </form>
+                        {/* Form Actions */}
+                        <div className="flex items-center justify-end space-x-4">
+                            <Button variant="secondary" asChild>
+                                <Link href={route('admin.products.index')}>
+                                    Cancel
+                                </Link>
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Creating...' : 'Create Sacred Product'}
+                            </Button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </AdminLayout>

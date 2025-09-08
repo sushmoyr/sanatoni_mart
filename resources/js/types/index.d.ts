@@ -140,6 +140,7 @@ export interface Product {
     specifications?: Record<string, any>;
     manage_stock: boolean;
     stock_quantity: number;
+    low_stock_threshold?: number;
     allow_backorders: boolean;
     stock_status: string;
     featured: boolean;
