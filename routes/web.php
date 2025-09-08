@@ -25,6 +25,9 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/categories/{category}/products', [ProductController::class, 'byCategory'])->name('products.by-category');
 Route::get('/search/products', [ProductController::class, 'search'])->name('products.search');
+Route::get('/api/products/autocomplete', [ProductController::class, 'autocomplete'])->name('products.autocomplete');
+Route::get('/api/products/recently-viewed', [ProductController::class, 'recentlyViewed'])->name('products.recently-viewed');
+Route::post('/api/products/{product}/track-view', [ProductController::class, 'trackView'])->name('products.track-view');
 
 // Shopping cart routes (available for both guest and authenticated users)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

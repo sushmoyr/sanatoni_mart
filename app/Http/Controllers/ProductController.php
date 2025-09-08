@@ -70,8 +70,11 @@ class ProductController extends Controller
     /**
      * Display the specified product
      */
-    public function show(Product $product)
+    public function show(Product $product, Request $request)
     {
+        // Track product view
+        $this->trackProductView($product, $request);
+
         // Load product with all relationships
         $product->load(['category', 'images']);
 
@@ -168,5 +171,146 @@ class ProductController extends Controller
             });
 
         return response()->json($products);
+    }
+
+    /**
+     * Get search autocomplete suggestions
+     */
+    public function autocomplete(Request $request)
+    {
+        $query = $request->get('q', '');
+        
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $suggestions = Product::where('status', 'published')
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('short_description', 'like', "%{$query}%");
+            })
+            ->select('id', 'name', 'price', 'main_image', 'slug')
+            ->limit(8)
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'image' => $product->main_image,
+                    'url' => route('products.show', $product->slug)
+                ];
+            });
+
+        return response()->json($suggestions);
+    }
+
+    /**
+     * Track recently viewed product
+     */
+    public function trackView(Product $product, Request $request)
+    {
+        $userId = auth()->id();
+        $sessionId = $request->session()->getId();
+
+        // Update or create recently viewed record
+        \App\Models\RecentlyViewedProduct::updateOrCreate(
+            [
+                'user_id' => $userId,
+                'session_id' => $userId ? null : $sessionId,
+                'product_id' => $product->id,
+            ],
+            [
+                'viewed_at' => now(),
+            ]
+        );
+
+        // Keep only the last 20 items per user/session
+        $recentViews = \App\Models\RecentlyViewedProduct::where(function ($query) use ($userId, $sessionId) {
+                if ($userId) {
+                    $query->where('user_id', $userId);
+                } else {
+                    $query->where('session_id', $sessionId);
+                }
+            })
+            ->orderBy('viewed_at', 'desc')
+            ->skip(20)
+            ->pluck('id');
+
+        if ($recentViews->isNotEmpty()) {
+            \App\Models\RecentlyViewedProduct::whereIn('id', $recentViews)->delete();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Get recently viewed products
+     */
+    public function recentlyViewed(Request $request)
+    {
+        $userId = auth()->id();
+        $sessionId = $request->session()->getId();
+
+        $recentlyViewedProducts = \App\Models\RecentlyViewedProduct::with(['product.images', 'product.category'])
+            ->where(function ($query) use ($userId, $sessionId) {
+                if ($userId) {
+                    $query->where('user_id', $userId);
+                } else {
+                    $query->where('session_id', $sessionId);
+                }
+            })
+            ->recent(12)
+            ->get()
+            ->map(function ($recentView) {
+                return [
+                    'id' => $recentView->product->id,
+                    'name' => $recentView->product->name,
+                    'price' => $recentView->product->price,
+                    'image' => $recentView->product->main_image,
+                    'category' => $recentView->product->category->name ?? null,
+                    'url' => route('products.show', $recentView->product->slug),
+                    'viewed_at' => $recentView->viewed_at->diffForHumans(),
+                ];
+            });
+
+        return response()->json($recentlyViewedProducts);
+    }
+
+    /**
+     * Private method to track product views
+     */
+    private function trackProductView(Product $product, Request $request)
+    {
+        $userId = auth()->id();
+        $sessionId = $request->session()->getId();
+
+        // Update or create recently viewed record
+        \App\Models\RecentlyViewedProduct::updateOrCreate(
+            [
+                'user_id' => $userId,
+                'session_id' => $userId ? null : $sessionId,
+                'product_id' => $product->id,
+            ],
+            [
+                'viewed_at' => now(),
+            ]
+        );
+
+        // Keep only the last 20 items per user/session
+        $recentViews = \App\Models\RecentlyViewedProduct::where(function ($query) use ($userId, $sessionId) {
+                if ($userId) {
+                    $query->where('user_id', $userId);
+                } else {
+                    $query->where('session_id', $sessionId);
+                }
+            })
+            ->orderBy('viewed_at', 'desc')
+            ->skip(20)
+            ->pluck('id');
+
+        if ($recentViews->isNotEmpty()) {
+            \App\Models\RecentlyViewedProduct::whereIn('id', $recentViews)->delete();
+        }
     }
 }
