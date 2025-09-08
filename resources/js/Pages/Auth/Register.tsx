@@ -1,12 +1,13 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useState } from 'react';
+import GuestLayout from '@/Layouts/GuestLayout';
+import { Button, Input, Card } from '@/Components/ui';
+import { EyeIcon, EyeSlashIcon, UserIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 
 export default function Register() {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+    
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
@@ -26,96 +27,140 @@ export default function Register() {
         <GuestLayout>
             <Head title="Register" />
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
+            <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-md w-full space-y-8">
+                    {/* Header */}
+                    <div className="text-center">
+                        <h2 className="text-3xl font-serif font-bold text-semantic-text mb-2">
+                            Join Our Sacred Community
+                        </h2>
+                        <p className="text-semantic-textSub">
+                            Start your spiritual journey with authentic products
+                        </p>
+                    </div>
 
-                    <TextInput
-                        id="name"
-                        name="name"
-                        value={data.name}
-                        className="mt-1 block w-full"
-                        autoComplete="name"
-                        isFocused={true}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
-                    />
+                    <Card className="p-8 devotional-border">
+                        <form onSubmit={submit} className="space-y-6">
+                            <div>
+                                <label htmlFor="name" className="block text-sm font-medium text-semantic-text mb-2">
+                                    Full Name
+                                </label>
+                                <Input
+                                    id="name"
+                                    type="text"
+                                    name="name"
+                                    value={data.name}
+                                    placeholder="Enter your full name"
+                                    autoComplete="name"
+                                    required
+                                    error={errors.name}
+                                    leftIcon={<UserIcon className="h-5 w-5" />}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('name', e.target.value)}
+                                />
+                            </div>
 
-                    <InputError message={errors.name} className="mt-2" />
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-semantic-text mb-2">
+                                    Email Address
+                                </label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    value={data.email}
+                                    placeholder="Enter your email"
+                                    autoComplete="username"
+                                    required
+                                    error={errors.email}
+                                    leftIcon={<EnvelopeIcon className="h-5 w-5" />}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('email', e.target.value)}
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-semantic-text mb-2">
+                                    Password
+                                </label>
+                                <Input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={data.password}
+                                    placeholder="Create a strong password"
+                                    autoComplete="new-password"
+                                    required
+                                    error={errors.password}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('password', e.target.value)}
+                                    rightIcon={
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="text-semantic-textSub hover:text-semantic-text transition-colors"
+                                        >
+                                            {showPassword ? (
+                                                <EyeSlashIcon className="h-5 w-5" />
+                                            ) : (
+                                                <EyeIcon className="h-5 w-5" />
+                                            )}
+                                        </button>
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="password_confirmation" className="block text-sm font-medium text-semantic-text mb-2">
+                                    Confirm Password
+                                </label>
+                                <Input
+                                    id="password_confirmation"
+                                    type={showPasswordConfirmation ? "text" : "password"}
+                                    name="password_confirmation"
+                                    value={data.password_confirmation}
+                                    placeholder="Confirm your password"
+                                    autoComplete="new-password"
+                                    required
+                                    error={errors.password_confirmation}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('password_confirmation', e.target.value)}
+                                    rightIcon={
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                                            className="text-semantic-textSub hover:text-semantic-text transition-colors"
+                                        >
+                                            {showPasswordConfirmation ? (
+                                                <EyeSlashIcon className="h-5 w-5" />
+                                            ) : (
+                                                <EyeIcon className="h-5 w-5" />
+                                            )}
+                                        </button>
+                                    }
+                                />
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                size="lg"
+                                disabled={processing}
+                            >
+                                {processing ? 'Creating Account...' : 'Create Account'}
+                            </Button>
+
+                            <div className="text-center pt-4 border-t border-semantic-border">
+                                <p className="text-sm text-semantic-textSub">
+                                    Already have an account?{' '}
+                                    <Link
+                                        href={route('login')}
+                                        className="text-brand-600 hover:text-brand-700 font-medium"
+                                    >
+                                        Sign in here
+                                    </Link>
+                                </p>
+                            </div>
+                        </form>
+                    </Card>
                 </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        value={data.password_confirmation}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
-                        required
-                    />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
-                    />
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    <Link
-                        href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        Already registered?
-                    </Link>
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
-                    </PrimaryButton>
-                </div>
-            </form>
+            </div>
         </GuestLayout>
     );
 }
