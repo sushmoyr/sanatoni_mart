@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ShippingZoneController;
 use Illuminate\Support\Facades\Route;
 
 // Admin routes - requires authentication and admin/manager roles
@@ -38,13 +39,17 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
     Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
     Route::get('orders/export/{format}', [OrderController::class, 'export'])->name('orders.export');
     
+    // Shipping Zone Management - Admin and Manager
+    Route::resource('shipping-zones', ShippingZoneController::class);
+    Route::post('shipping-zones/{shippingZone}/toggle-status', [ShippingZoneController::class, 'toggleStatus'])->name('shipping-zones.toggle-status');
+    Route::post('shipping-zones/test-area', [ShippingZoneController::class, 'testArea'])->name('shipping-zones.test-area');
+    
     // User Management - Admin only
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
     });
     
     // Future admin routes will be added here as we progress through milestones
-    // Route::resource('shipping-zones', ShippingZoneController::class);
     // Route::resource('invoices', InvoiceController::class);
     // etc.
 });

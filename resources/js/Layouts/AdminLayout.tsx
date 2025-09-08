@@ -10,6 +10,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         { name: 'Dashboard', href: route('admin.dashboard'), icon: '📊' },
         { name: 'Categories', href: route('admin.categories.index'), icon: '📁', permission: 'view_categories' },
         { name: 'Products', href: route('admin.products.index'), icon: '📦', permission: 'view_products' },
+        { name: 'Shipping Zones', href: route('admin.shipping-zones.index'), icon: '🚚', permission: 'view_products' },
         { name: 'Reports', href: route('admin.reports.inventory'), icon: '📈', permission: 'view_products' },
         { name: 'Users', href: route('admin.users.index'), icon: '👥', permission: 'view_users' },
         // Future navigation items will be added here
