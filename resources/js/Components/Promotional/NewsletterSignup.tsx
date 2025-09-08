@@ -93,14 +93,12 @@ export default function NewsletterSignup({
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
                         className="border-orange-300 focus:border-orange-500"
-                        size="sm"
                     />
                 </div>
                 <Button
                     onClick={data.email.trim() ? handleSubmit : () => setShowFullForm(true)}
                     disabled={processing}
                     variant="primary"
-                    size="sm"
                     className="whitespace-nowrap"
                 >
                     {processing ? '...' : showDiscount ? `Get ${discountPercent}% OFF` : 'Subscribe'}

@@ -74,14 +74,16 @@ class CouponController extends Controller
      */
     public function create(): Response
     {
-        $products = Product::select('id', 'name', 'price', 'sku')
+        $products = Product::select('id', 'name', 'price', 'sku', 'category_id')
             ->where('is_active', true)
-            ->with(['category:id,name'])
+            ->with(['category' => function ($query) {
+                $query->select('id', 'name')->where('is_active', true);
+            }])
             ->orderBy('name')
             ->get();
 
         $categories = Category::select('id', 'name')
-            ->where('active', true)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
@@ -165,14 +167,16 @@ class CouponController extends Controller
      */
     public function edit(Coupon $coupon): Response
     {
-        $products = Product::select('id', 'name', 'price', 'sku')
+        $products = Product::select('id', 'name', 'price', 'sku', 'category_id')
             ->where('is_active', true)
-            ->with(['category:id,name'])
+            ->with(['category' => function ($query) {
+                $query->select('id', 'name')->where('is_active', true);
+            }])
             ->orderBy('name')
             ->get();
 
         $categories = Category::select('id', 'name')
-            ->where('active', true)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 

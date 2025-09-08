@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { PageProps } from '@/types';
@@ -24,66 +24,80 @@ interface Category {
     name: string;
 }
 
+interface Coupon {
+    id: number;
+    code: string;
+    name: string;
+    description: string | null;
+    type: 'percentage' | 'fixed';
+    value: number;
+    minimum_order_amount: number | null;
+    product_ids: number[] | null;
+    category_ids: number[] | null;
+    usage_limit: number | null;
+    used_count: number;
+    per_customer_limit: number | null;
+    valid_from: string;
+    valid_until: string | null;
+    status: 'active' | 'inactive' | 'expired';
+}
+
 interface Props extends PageProps {
+    coupon: Coupon;
     products: Product[];
     categories: Category[];
 }
 
-export default function Create({ products, categories }: Props) {
-    const [generatingCode, setGeneratingCode] = useState(false);
+export default function Edit({ coupon, products, categories }: Props) {
     const [applicationType, setApplicationType] = useState<'all' | 'specific_products' | 'specific_categories'>('all');
 
-    const { data, setData, post, processing, errors, reset } = useForm({
-        code: '',
-        name: '',
-        description: '',
-        type: 'percentage',
-        value: '',
-        minimum_order_amount: '',
-        product_ids: [] as number[],
-        category_ids: [] as number[],
-        usage_limit: '',
-        per_customer_limit: '',
-        valid_from: '',
-        valid_until: '',
-        status: 'active',
+    const { data, setData, put, processing, errors, reset } = useForm({
+        code: coupon.code,
+        name: coupon.name,
+        description: coupon.description || '',
+        type: coupon.type,
+        value: coupon.value.toString(),
+        minimum_order_amount: coupon.minimum_order_amount?.toString() || '',
+        product_ids: coupon.product_ids || [],
+        category_ids: coupon.category_ids || [],
+        usage_limit: coupon.usage_limit?.toString() || '',
+        per_customer_limit: coupon.per_customer_limit?.toString() || '',
+        valid_from: coupon.valid_from.slice(0, 16), // Format for datetime-local input
+        valid_until: coupon.valid_until?.slice(0, 16) || '',
+        status: coupon.status,
     });
 
-    const generateCouponCode = async () => {
-        setGeneratingCode(true);
-        try {
-            const response = await fetch(route('admin.coupons.generate-code'));
-            const result = await response.json();
-            if (result.code) {
-                setData('code', result.code);
-            }
-        } catch (error) {
-            console.error('Failed to generate coupon code:', error);
-        } finally {
-            setGeneratingCode(false);
+    // Set initial application type based on existing data
+    useEffect(() => {
+        if (coupon.product_ids && coupon.product_ids.length > 0) {
+            setApplicationType('specific_products');
+        } else if (coupon.category_ids && coupon.category_ids.length > 0) {
+            setApplicationType('specific_categories');
+        } else {
+            setApplicationType('all');
         }
-    };
+    }, [coupon]);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('admin.coupons.store'));
+        put(route('admin.coupons.update', coupon.id));
     };
 
     const cancel = () => {
-        router.get(route('admin.coupons.index'));
+        router.get(route('admin.coupons.show', coupon.id));
     };
 
     return (
         <AdminLayout>
-            <Head title="Create Coupon" />
+            <Head title={`Edit Coupon - ${coupon.name}`} />
 
             <div className="px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="sm:flex sm:items-center">
                     <div className="sm:flex-auto">
-                        <h1 className="text-2xl font-semibold leading-6 text-gray-900">Create Coupon</h1>
+                        <h1 className="text-2xl font-semibold leading-6 text-gray-900">Edit Coupon</h1>
                         <p className="mt-2 text-sm text-gray-700">
-                            Create a new discount coupon for promotional campaigns
+                            Update the discount coupon details and settings
                         </p>
                     </div>
                 </div>
@@ -111,25 +125,15 @@ export default function Create({ products, categories }: Props) {
 
                                 <div>
                                     <InputLabel htmlFor="code" value="Coupon Code" />
-                                    <div className="mt-1 flex">
-                                        <TextInput
-                                            id="code"
-                                            type="text"
-                                            name="code"
-                                            value={data.code}
-                                            className="flex-1"
-                                            placeholder="e.g., SAVE20, WELCOME10"
-                                            onChange={(e) => setData('code', e.target.value.toUpperCase())}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={generateCouponCode}
-                                            disabled={generatingCode}
-                                            className="ml-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                                        >
-                                            {generatingCode ? 'Generating...' : 'Generate'}
-                                        </button>
-                                    </div>
+                                    <TextInput
+                                        id="code"
+                                        type="text"
+                                        name="code"
+                                        value={data.code}
+                                        className="mt-1 block w-full"
+                                        placeholder="e.g., SAVE20, WELCOME10"
+                                        onChange={(e) => setData('code', e.target.value.toUpperCase())}
+                                    />
                                     <InputError message={errors.code} className="mt-2" />
                                 </div>
 
@@ -381,13 +385,15 @@ export default function Create({ products, categories }: Props) {
                                         type="number"
                                         name="usage_limit"
                                         value={data.usage_limit}
-                                        min="1"
+                                        min={coupon.used_count.toString()}
                                         step="1"
                                         placeholder="e.g., 100"
                                         onChange={(e) => setData('usage_limit', e.target.value)}
                                     />
                                     <InputError message={errors.usage_limit} className="mt-2" />
-                                    <p className="mt-1 text-sm text-gray-500">Total number of uses allowed</p>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Total uses allowed (minimum: {coupon.used_count} - current usage)
+                                    </p>
                                 </div>
 
                                 <div>
@@ -412,22 +418,72 @@ export default function Create({ products, categories }: Props) {
                         <div>
                             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Status</h3>
                             
-                            <div className="flex items-center">
-                                <input
-                                    id="status"
-                                    name="status"
-                                    type="checkbox"
-                                    checked={data.status === 'active'}
-                                    onChange={(e) => setData('status', e.target.checked ? 'active' : 'inactive')}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                />
-                                <label htmlFor="status" className="ml-2 block text-sm text-gray-900">
-                                    Active Coupon
-                                </label>
+                            <div className="space-y-4">
+                                <div className="flex items-center">
+                                    <input
+                                        id="status_active"
+                                        name="status"
+                                        type="radio"
+                                        value="active"
+                                        checked={data.status === 'active'}
+                                        onChange={(e) => setData('status', e.target.value as 'active' | 'inactive')}
+                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                    />
+                                    <label htmlFor="status_active" className="ml-2 block text-sm text-gray-900">
+                                        Active
+                                    </label>
+                                </div>
+                                <div className="flex items-center">
+                                    <input
+                                        id="status_inactive"
+                                        name="status"
+                                        type="radio"
+                                        value="inactive"
+                                        checked={data.status === 'inactive'}
+                                        onChange={(e) => setData('status', e.target.value as 'active' | 'inactive')}
+                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                    />
+                                    <label htmlFor="status_inactive" className="ml-2 block text-sm text-gray-900">
+                                        Inactive
+                                    </label>
+                                </div>
+                                {coupon.status === 'expired' && (
+                                    <div className="flex items-center">
+                                        <input
+                                            id="status_expired"
+                                            name="status"
+                                            type="radio"
+                                            value="expired"
+                                            checked={data.status === 'expired'}
+                                            disabled
+                                            className="h-4 w-4 text-gray-400 border-gray-300"
+                                        />
+                                        <label htmlFor="status_expired" className="ml-2 block text-sm text-gray-500">
+                                            Expired (cannot be changed)
+                                        </label>
+                                    </div>
+                                )}
                             </div>
                             <p className="mt-1 text-sm text-gray-500">
                                 Inactive coupons cannot be used by customers
                             </p>
+                        </div>
+
+                        {/* Usage Statistics */}
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                            <h4 className="text-sm font-medium text-gray-900 mb-2">Usage Statistics</h4>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span className="text-gray-500">Times Used:</span>
+                                    <span className="ml-2 font-medium">{coupon.used_count}</span>
+                                </div>
+                                {coupon.usage_limit && (
+                                    <div>
+                                        <span className="text-gray-500">Usage Limit:</span>
+                                        <span className="ml-2 font-medium">{coupon.usage_limit}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Preview */}
@@ -465,7 +521,7 @@ export default function Create({ products, categories }: Props) {
                                 Cancel
                             </SecondaryButton>
                             <PrimaryButton disabled={processing}>
-                                {processing ? 'Creating...' : 'Create Coupon'}
+                                {processing ? 'Updating...' : 'Update Coupon'}
                             </PrimaryButton>
                         </div>
                     </form>
