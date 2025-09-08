@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ReportController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,12 +29,18 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
     Route::get('reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
     Route::get('reports/inventory-alerts', [ReportController::class, 'inventoryAlerts'])->name('reports.inventory-alerts');
     
+    // Order Management - Admin and Manager
+    Route::resource('orders', OrderController::class)->except(['store']);
+    Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::get('orders/export/{format}', [OrderController::class, 'export'])->name('orders.export');
+    
     // User Management - Admin only
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
     });
     
     // Future admin routes will be added here as we progress through milestones
-    // Route::resource('orders', OrderController::class);
+    // Route::resource('shipping-zones', ShippingZoneController::class);
+    // Route::resource('invoices', InvoiceController::class);
     // etc.
 });

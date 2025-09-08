@@ -7,6 +7,8 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -33,6 +35,15 @@ Route::put('/cart/{shoppingCart}', [CartController::class, 'update'])->name('car
 Route::delete('/cart/{shoppingCart}', [CartController::class, 'destroy'])->name('cart.destroy');
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
+
+// Checkout routes (available for both guest and authenticated users)
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.calculate-shipping');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+
+// Order tracking for guests
+Route::get('/track-order', [OrderController::class, 'trackForm'])->name('orders.track-form');
+Route::post('/track-order', [OrderController::class, 'track'])->name('orders.track');
 
 Route::get('/dashboard', function () {
     $user = auth()->user();
@@ -80,6 +91,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Authenticated cart operations
     Route::post('/cart/merge-guest', [CartController::class, 'mergeGuestCart'])->name('cart.merge-guest');
+
+    // Customer orders
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
 });
 
 require __DIR__.'/auth.php';

@@ -45,7 +45,7 @@ export default function CartIndex({ auth, cartItems, cartSummary }: CartIndexPro
 
     return (
         <BrandedStoreLayout title="Shopping Cart" description="Review your selected items and proceed to checkout">
-            <div className="py-8">
+            <div className="sacred-bg min-h-screen py-8">
                 <div className="container-custom">
                     <div className="mb-8 text-center">
                         <h1 className="text-3xl font-serif font-bold text-semantic-text mb-2">Shopping Cart</h1>
@@ -56,7 +56,7 @@ export default function CartIndex({ auth, cartItems, cartSummary }: CartIndexPro
 
                     {cartItems.length === 0 ? (
                         // Empty Cart State
-                        <Card className="p-12 text-center max-w-md mx-auto">
+                        <Card className="p-12 text-center max-w-md mx-auto devotional-border">
                             <div className="mx-auto h-24 w-24 text-semantic-textSub mb-6">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5-6M17 17h.01M9 17h.01" />
@@ -86,7 +86,7 @@ export default function CartIndex({ auth, cartItems, cartSummary }: CartIndexPro
                                     </Button>
                                 </div>
 
-                                <Card className="divide-y divide-semantic-border">
+                                <Card className="divide-y divide-semantic-border devotional-border">
                                     {cartItems.map((item) => (
                                         <div key={item.id} className="p-6">
                                             <div className="flex items-start space-x-4">
@@ -165,7 +165,7 @@ export default function CartIndex({ auth, cartItems, cartSummary }: CartIndexPro
 
                             {/* Cart Summary */}
                             <div>
-                                <Card className="p-6 sticky top-6">
+                                <Card className="p-6 sticky top-6 devotional-border">
                                     <h2 className="text-xl font-serif font-semibold text-semantic-text mb-6">Order Summary</h2>
                                     
                                     <div className="space-y-4">
@@ -188,8 +188,10 @@ export default function CartIndex({ auth, cartItems, cartSummary }: CartIndexPro
                                     </div>
 
                                     <div className="mt-8 space-y-3">
-                                        <Button className="w-full" size="lg">
-                                            Proceed to Checkout
+                                        <Button className="w-full" size="lg" asChild>
+                                            <Link href={route('checkout.index')}>
+                                                Proceed to Checkout
+                                            </Link>
                                         </Button>
                                         
                                         <Button variant="tertiary" className="w-full" asChild>

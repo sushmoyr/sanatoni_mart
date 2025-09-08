@@ -28,6 +28,7 @@ export default function ProductsIndex({ auth, products, categories = [], filters
     const [selectedCategory, setSelectedCategory] = useState(filters.category || '');
     const [minPrice, setMinPrice] = useState(filters.min_price || '');
     const [maxPrice, setMaxPrice] = useState(filters.max_price || '');
+    const [addingToCart, setAddingToCart] = useState<number | null>(null);
 
     const handleFilter = () => {
         const filterData: any = {};
@@ -45,6 +46,21 @@ export default function ProductsIndex({ auth, products, categories = [], filters
         setMinPrice('');
         setMaxPrice('');
         router.get(route('products.index'));
+    };
+
+    const handleAddToCart = (productId: number) => {
+        setAddingToCart(productId);
+        
+        router.post('/cart', {
+            product_id: productId,
+            quantity: 1
+        }, {
+            preserveScroll: true,
+            onFinish: () => setAddingToCart(null),
+            onSuccess: () => {
+                // Optionally show a success message or update UI
+            }
+        });
     };
 
     const productsList = products?.data || [];
@@ -133,7 +149,12 @@ export default function ProductsIndex({ auth, products, categories = [], filters
                     {productsList.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {productsList.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                                <ProductCard 
+                                    key={product.id} 
+                                    product={product} 
+                                    onAddToCart={handleAddToCart}
+                                    loading={addingToCart === product.id}
+                                />
                             ))}
                         </div>
                     ) : (
