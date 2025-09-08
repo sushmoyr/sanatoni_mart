@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import BrandedStoreLayout from '@/Layouts/BrandedStoreLayout';
 import { Product, Category, PageProps } from '@/types';
 import { ProductCard, Input, Button, Badge, Card } from '@/Components/ui';
+import SearchAutocomplete from '@/Components/SearchAutocomplete';
 import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 interface ProductsIndexProps extends PageProps {
@@ -67,12 +68,17 @@ export default function ProductsIndex({ auth, products, categories = [], filters
                     <Card className="mb-8 p-6">
                         <div className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1">
-                                <Input
-                                    type="text"
-                                    value={searchTerm}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                                <SearchAutocomplete
                                     placeholder="Search sacred items..."
-                                    leftIcon={<MagnifyingGlassIcon className="h-5 w-5" />}
+                                    className="w-full"
+                                    onSearch={(query) => {
+                                        setSearchTerm(query);
+                                        const filterData: any = { search: query };
+                                        if (selectedCategory) filterData.category = selectedCategory;
+                                        if (minPrice) filterData.min_price = minPrice;
+                                        if (maxPrice) filterData.max_price = maxPrice;
+                                        router.get(route('products.index'), filterData, { preserveState: true });
+                                    }}
                                 />
                             </div>
                             

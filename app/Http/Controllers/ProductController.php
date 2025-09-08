@@ -298,19 +298,30 @@ class ProductController extends Controller
         );
 
         // Keep only the last 20 items per user/session
-        $recentViews = \App\Models\RecentlyViewedProduct::where(function ($query) use ($userId, $sessionId) {
+        $totalCount = \App\Models\RecentlyViewedProduct::where(function ($query) use ($userId, $sessionId) {
                 if ($userId) {
                     $query->where('user_id', $userId);
                 } else {
                     $query->where('session_id', $sessionId);
                 }
             })
-            ->orderBy('viewed_at', 'desc')
-            ->skip(20)
-            ->pluck('id');
+            ->count();
 
-        if ($recentViews->isNotEmpty()) {
-            \App\Models\RecentlyViewedProduct::whereIn('id', $recentViews)->delete();
+        if ($totalCount > 20) {
+            $recentViews = \App\Models\RecentlyViewedProduct::where(function ($query) use ($userId, $sessionId) {
+                    if ($userId) {
+                        $query->where('user_id', $userId);
+                    } else {
+                        $query->where('session_id', $sessionId);
+                    }
+                })
+                ->orderBy('viewed_at', 'asc')
+                ->limit($totalCount - 20)
+                ->pluck('id');
+
+            if ($recentViews->isNotEmpty()) {
+                \App\Models\RecentlyViewedProduct::whereIn('id', $recentViews)->delete();
+            }
         }
     }
 }
