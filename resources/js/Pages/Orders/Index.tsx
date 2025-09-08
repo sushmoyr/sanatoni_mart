@@ -1,9 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import BrandedStoreLayout from '@/Layouts/BrandedStoreLayout';
 import { Button, Card, Badge, Input } from '@/Components/ui';
 import { PageProps } from '@/types';
-import { ShoppingBagIcon, MagnifyingGlassIcon, ClockIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { 
+    ShoppingBagIcon, 
+    MagnifyingGlassIcon, 
+    ClockIcon, 
+    XMarkIcon, 
+    ArrowPathIcon,
+    FunnelIcon,
+    CalendarIcon,
+    CurrencyDollarIcon,
+    AdjustmentsHorizontalIcon,
+    ChartBarIcon,
+    ChevronDownIcon,
+    Bars3BottomLeftIcon
+} from '@heroicons/react/24/outline';
 
 interface OrderItem {
     id: number;
@@ -43,16 +56,40 @@ interface PaginationData {
     total: number;
 }
 
+interface OrderStats {
+    total_orders: number;
+    total_spent: number;
+    average_order_value: number;
+}
+
+interface QuickActions {
+    pending_orders: number;
+    processing_orders: number;
+    shipped_orders: number;
+}
+
 interface Props extends PageProps {
     orders: PaginationData;
     orderStatuses: Record<string, string>;
+    statusCounts: Record<string, number>;
     filters: {
         status?: string;
         search?: string;
+        date_from?: string;
+        date_to?: string;
+        amount_min?: string;
+        amount_max?: string;
+        sort_by?: string;
+        sort_direction?: string;
     };
+    orderStats: OrderStats;
+    quickActions: QuickActions;
 }
 
-export default function OrderIndex({ auth, orders, orderStatuses, filters }: Props) {
+export default function OrderIndex({ auth, orders, orderStatuses, statusCounts, filters, orderStats, quickActions }: Props) {
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [localFilters, setLocalFilters] = useState(filters);
+
     const handleStatusFilter = (status: string) => {
         router.get(route('orders.index'), { 
             ...filters, 
@@ -60,11 +97,29 @@ export default function OrderIndex({ auth, orders, orderStatuses, filters }: Pro
         });
     };
 
+    const handleAdvancedFilter = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        router.get(route('orders.index'), localFilters);
+    };
+
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const search = formData.get('search') as string;
         router.get(route('orders.index'), { ...filters, search });
+    };
+
+    const handleSort = (sortBy: string) => {
+        const newDirection = filters.sort_by === sortBy && filters.sort_direction === 'desc' ? 'asc' : 'desc';
+        router.get(route('orders.index'), { 
+            ...filters, 
+            sort_by: sortBy, 
+            sort_direction: newDirection 
+        });
+    };
+
+    const clearFilters = () => {
+        router.get(route('orders.index'));
     };
 
     const handleReorder = (orderId: number) => {
@@ -77,20 +132,93 @@ export default function OrderIndex({ auth, orders, orderStatuses, filters }: Pro
         }
     };
 
+    const formatPrice = (price: number) => {
+        return `৳${price.toLocaleString('en-IN')}`;
+    };
+
     return (
         <BrandedStoreLayout>
             <Head title="My Orders" />
 
             <div className="sacred-bg min-h-screen py-8">
                 <div className="container-custom">
-                    {/* Header */}
+                    {/* Header with Stats */}
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-serif font-bold text-semantic-text mb-2">
-                            My Orders
+                            My Sacred Orders
                         </h1>
                         <p className="text-semantic-textSub">
-                            Track and manage your sacred purchases
+                            Track and manage your spiritual journey
                         </p>
+                    </div>
+
+                    {/* Order Statistics */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <Card className="p-4 devotional-border text-center">
+                            <div className="flex items-center justify-center mb-2">
+                                <ChartBarIcon className="w-6 h-6 text-brand-600" />
+                            </div>
+                            <p className="text-2xl font-bold text-semantic-text">{orderStats.total_orders}</p>
+                            <p className="text-sm text-semantic-textSub">Total Orders</p>
+                        </Card>
+                        <Card className="p-4 devotional-border text-center">
+                            <div className="flex items-center justify-center mb-2">
+                                <CurrencyDollarIcon className="w-6 h-6 text-green-600" />
+                            </div>
+                            <p className="text-2xl font-bold text-semantic-text">{formatPrice(orderStats.total_spent)}</p>
+                            <p className="text-sm text-semantic-textSub">Total Spent</p>
+                        </Card>
+                        <Card className="p-4 devotional-border text-center">
+                            <div className="flex items-center justify-center mb-2">
+                                <Bars3BottomLeftIcon className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <p className="text-2xl font-bold text-semantic-text">{formatPrice(orderStats.average_order_value)}</p>
+                            <p className="text-sm text-semantic-textSub">Average Order</p>
+                        </Card>
+                        <Card className="p-4 devotional-border text-center">
+                            <div className="flex items-center justify-center mb-2">
+                                <ClockIcon className="w-6 h-6 text-orange-600" />
+                            </div>
+                            <p className="text-2xl font-bold text-semantic-text">{quickActions.pending_orders + quickActions.processing_orders}</p>
+                            <p className="text-sm text-semantic-textSub">Active Orders</p>
+                        </Card>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <Button 
+                            variant={quickActions.pending_orders > 0 ? "primary" : "secondary"} 
+                            className="justify-between h-auto p-4"
+                            onClick={() => handleStatusFilter('pending')}
+                        >
+                            <div className="text-left">
+                                <p className="font-semibold">Pending Orders</p>
+                                <p className="text-sm opacity-80">Awaiting confirmation</p>
+                            </div>
+                            <div className="text-2xl font-bold">{quickActions.pending_orders}</div>
+                        </Button>
+                        <Button 
+                            variant={quickActions.processing_orders > 0 ? "primary" : "secondary"} 
+                            className="justify-between h-auto p-4"
+                            onClick={() => handleStatusFilter('processing')}
+                        >
+                            <div className="text-left">
+                                <p className="font-semibold">Processing</p>
+                                <p className="text-sm opacity-80">Being prepared</p>
+                            </div>
+                            <div className="text-2xl font-bold">{quickActions.processing_orders}</div>
+                        </Button>
+                        <Button 
+                            variant={quickActions.shipped_orders > 0 ? "primary" : "secondary"} 
+                            className="justify-between h-auto p-4"
+                            onClick={() => handleStatusFilter('shipped')}
+                        >
+                            <div className="text-left">
+                                <p className="font-semibold">Shipped</p>
+                                <p className="text-sm opacity-80">On the way</p>
+                            </div>
+                            <div className="text-2xl font-bold">{quickActions.shipped_orders}</div>
+                        </Button>
                     </div>
 
                     <div className="mb-6 flex justify-end">
@@ -104,28 +232,49 @@ export default function OrderIndex({ auth, orders, orderStatuses, filters }: Pro
 
                     {/* Filters */}
                     <Card className="p-6 mb-6 devotional-border">
-                        <div className="flex flex-col md:flex-row gap-4">
-                            {/* Search */}
-                            <form onSubmit={handleSearch} className="flex-1 max-w-md">
-                                <div className="relative">
-                                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-semantic-textSub" />
-                                    <Input
-                                        type="text"
-                                        name="search"
-                                        placeholder="Search by order number or product..."
-                                        defaultValue={filters.search || ''}
-                                        className="pl-10"
-                                    />
+                        <div className="flex flex-col space-y-4">
+                            {/* Basic Search and Filters */}
+                            <div className="flex flex-col md:flex-row gap-4">
+                                {/* Search */}
+                                <form onSubmit={handleSearch} className="flex-1 max-w-md">
+                                    <div className="relative">
+                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-semantic-textSub" />
+                                        <Input
+                                            type="text"
+                                            name="search"
+                                            placeholder="Search orders, products, notes..."
+                                            defaultValue={filters.search || ''}
+                                            className="pl-10"
+                                        />
+                                        <Button
+                                            type="submit"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                                        >
+                                            Search
+                                        </Button>
+                                    </div>
+                                </form>
+
+                                {/* Advanced Filters Toggle */}
+                                <div className="flex items-center space-x-2">
                                     <Button
-                                        type="submit"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                                        variant="secondary"
+                                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                                     >
-                                        Search
+                                        <FunnelIcon className="h-4 w-4 mr-2" />
+                                        Advanced Filters
+                                        <ChevronDownIcon className={`h-4 w-4 ml-2 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
                                     </Button>
+                                    {(filters.status || filters.search || filters.date_from || filters.date_to || filters.amount_min || filters.amount_max) && (
+                                        <Button variant="ghost" onClick={clearFilters}>
+                                            <XMarkIcon className="h-4 w-4 mr-1" />
+                                            Clear
+                                        </Button>
+                                    )}
                                 </div>
-                            </form>
+                            </div>
 
                             {/* Status Filter */}
                             <div className="flex flex-wrap gap-2">
@@ -134,18 +283,109 @@ export default function OrderIndex({ auth, orders, orderStatuses, filters }: Pro
                                     className="cursor-pointer"
                                     onClick={() => handleStatusFilter('')}
                                 >
-                                    All Orders
+                                    All Orders ({orders.total})
                                 </Badge>
-                                {Object.entries(orderStatuses).map(([value, label]) => (
-                                    <Badge
-                                        key={value}
-                                        variant={filters.status === value ? "default" : "secondary"}
-                                        className="cursor-pointer"
-                                        onClick={() => handleStatusFilter(value)}
-                                    >
-                                        {label}
-                                    </Badge>
-                                ))}
+                                {Object.entries(orderStatuses).map(([value, label]) => {
+                                    const count = statusCounts[value] || 0;
+                                    return (
+                                        <Badge
+                                            key={value}
+                                            variant={filters.status === value ? "default" : "secondary"}
+                                            className="cursor-pointer"
+                                            onClick={() => handleStatusFilter(value)}
+                                        >
+                                            {label} ({count})
+                                        </Badge>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Advanced Filters */}
+                            {showAdvancedFilters && (
+                                <form onSubmit={handleAdvancedFilter} className="border-t border-semantic-border pt-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-semantic-text mb-1">From Date</label>
+                                            <Input
+                                                type="date"
+                                                value={localFilters.date_from || ''}
+                                                onChange={(e) => setLocalFilters({...localFilters, date_from: e.target.value})}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-semantic-text mb-1">To Date</label>
+                                            <Input
+                                                type="date"
+                                                value={localFilters.date_to || ''}
+                                                onChange={(e) => setLocalFilters({...localFilters, date_to: e.target.value})}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-semantic-text mb-1">Min Amount (৳)</label>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={localFilters.amount_min || ''}
+                                                onChange={(e) => setLocalFilters({...localFilters, amount_min: e.target.value})}
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-semantic-text mb-1">Max Amount (৳)</label>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={localFilters.amount_max || ''}
+                                                onChange={(e) => setLocalFilters({...localFilters, amount_max: e.target.value})}
+                                                placeholder="999999.99"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        <Button type="submit" variant="primary">
+                                            Apply Filters
+                                        </Button>
+                                        <Button 
+                                            type="button" 
+                                            variant="secondary"
+                                            onClick={() => setLocalFilters({})}
+                                        >
+                                            Reset
+                                        </Button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
+                    </Card>
+
+                    {/* Sorting Options */}
+                    <Card className="p-4 mb-6 devotional-border">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-semantic-text">Sort by:</span>
+                            <div className="flex space-x-2">
+                                <Button
+                                    variant={filters.sort_by === 'created_at' ? 'primary' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => handleSort('created_at')}
+                                >
+                                    Date {filters.sort_by === 'created_at' && (filters.sort_direction === 'desc' ? '↓' : '↑')}
+                                </Button>
+                                <Button
+                                    variant={filters.sort_by === 'total' ? 'primary' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => handleSort('total')}
+                                >
+                                    Amount {filters.sort_by === 'total' && (filters.sort_direction === 'desc' ? '↓' : '↑')}
+                                </Button>
+                                <Button
+                                    variant={filters.sort_by === 'status' ? 'primary' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => handleSort('status')}
+                                >
+                                    Status {filters.sort_by === 'status' && (filters.sort_direction === 'desc' ? '↓' : '↑')}
+                                </Button>
                             </div>
                         </div>
                     </Card>
@@ -161,11 +401,11 @@ export default function OrderIndex({ auth, orders, orderStatuses, filters }: Pro
                                 </div>
                                 <h3 className="text-xl font-serif font-semibold text-semantic-text mb-2">No orders found</h3>
                                 <p className="text-semantic-textSub mb-6">
-                                    {filters.status || filters.search
+                                    {filters.status || filters.search || filters.date_from || filters.date_to || filters.amount_min || filters.amount_max
                                         ? 'Try adjusting your filters or search terms.'
                                         : "You haven't placed any orders yet."}
                                 </p>
-                                {!filters.status && !filters.search && (
+                                {!filters.status && !filters.search && !filters.date_from && !filters.date_to && !filters.amount_min && !filters.amount_max && (
                                     <Button asChild>
                                         <Link href={route('products.index')}>
                                             <ShoppingBagIcon className="h-4 w-4 mr-2" />
@@ -185,11 +425,17 @@ export default function OrderIndex({ auth, orders, orderStatuses, filters }: Pro
                                                 </h3>
                                                 <p className="text-sm text-semantic-textSub flex items-center">
                                                     <ClockIcon className="h-4 w-4 mr-1" />
-                                                    Placed on {new Date(order.created_at).toLocaleDateString()}
+                                                    Placed on {new Date(order.created_at).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
                                                 </p>
                                             </div>
                                             <Badge 
-                                                variant={order.status === 'completed' ? 'success' : order.status === 'cancelled' ? 'danger' : 'default'}
+                                                variant={order.status === 'delivered' ? 'success' : order.status === 'cancelled' ? 'danger' : 'default'}
                                             >
                                                 {orderStatuses[order.status] || order.status}
                                             </Badge>
@@ -224,14 +470,14 @@ export default function OrderIndex({ auth, orders, orderStatuses, filters }: Pro
 
                                     {/* Action Buttons */}
                                     <div className="flex flex-wrap gap-3">
-                                        <Button variant="secondary" asChild>
+                                        <Button variant="primary" asChild>
                                             <Link href={route('orders.show', order.id)}>
-                                                View Details
+                                                View Details & Track
                                             </Link>
                                         </Button>
                                         
                                         <Button
-                                            variant="tertiary"
+                                            variant="secondary"
                                             onClick={() => handleReorder(order.id)}
                                         >
                                             <ArrowPathIcon className="h-4 w-4 mr-2" />
@@ -240,9 +486,8 @@ export default function OrderIndex({ auth, orders, orderStatuses, filters }: Pro
 
                                         {order.can_be_cancelled && (
                                             <Button
-                                                variant="ghost"
+                                                variant="destructive"
                                                 onClick={() => handleCancel(order.id)}
-                                                className="text-danger-600 hover:text-danger-700 hover:bg-danger-50"
                                             >
                                                 <XMarkIcon className="h-4 w-4 mr-2" />
                                                 Cancel Order

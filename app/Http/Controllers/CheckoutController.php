@@ -213,8 +213,8 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            // Send order confirmation email (implement later)
-            // $this->sendOrderConfirmationEmail($order);
+            // Send order confirmation email
+            $this->sendOrderConfirmationEmail($order);
 
             return redirect()->route('orders.show', $order->id)->with([
                 'flash' => [
@@ -292,7 +292,15 @@ class CheckoutController extends Controller
      */
     private function sendOrderConfirmationEmail(Order $order)
     {
-        // TODO: Implement email notification
-        // This will be implemented when we add email templates
+        try {
+            Mail::to($order->customer_email)->send(new \App\Mail\OrderConfirmation($order));
+        } catch (\Exception $e) {
+            // Log the error but don't fail the order
+            logger()->error('Failed to send order confirmation email', [
+                'order_id' => $order->id,
+                'customer_email' => $order->customer_email,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

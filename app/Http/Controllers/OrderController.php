@@ -24,34 +24,108 @@ class OrderController extends Controller
             ]);
         }
 
-        $orders = Order::with(['items.product.images', 'statusHistory'])
-            ->where('user_id', $user->id)
-            ->when($request->status, function ($query, $status) {
-                return $query->where('status', $status);
-            })
-            ->when($request->search, function ($query, $search) {
-                return $query->where(function ($q) use ($search) {
-                    $q->where('order_number', 'like', "%{$search}%")
-                      ->orWhereHas('items.product', function ($productQuery) use ($search) {
-                          $productQuery->where('name', 'like', "%{$search}%");
-                      });
-                });
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        // Advanced filtering parameters
+        $filters = $request->only(['status', 'search', 'date_from', 'date_to', 'amount_min', 'amount_max', 'sort_by', 'sort_direction']);
+        
+        $query = Order::with([
+            'items.product.images', 
+            'statusHistory' => function($q) {
+                $q->orderBy('created_at', 'desc')->limit(3);
+            }
+        ])->where('user_id', $user->id);
 
+        // Status filter
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        // Search filter (order number, product names, notes)
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('order_number', 'like', "%{$request->search}%")
+                  ->orWhere('notes', 'like', "%{$request->search}%")
+                  ->orWhereHas('items.product', function ($productQuery) use ($request) {
+                      $productQuery->where('name', 'like', "%{$request->search}%");
+                  });
+            });
+        }
+
+        // Date range filter
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Amount range filter
+        if ($request->amount_min) {
+            $query->where('total', '>=', $request->amount_min);
+        }
+        if ($request->amount_max) {
+            $query->where('total', '<=', $request->amount_max);
+        }
+
+        // Sorting
+        $sortBy = $request->sort_by ?? 'created_at';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        
+        $allowedSorts = ['created_at', 'total', 'order_number', 'status'];
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $orders = $query->paginate(12)->withQueryString();
+
+        // Enhanced order statuses with counts
         $orderStatuses = [
             'pending' => 'Pending',
-            'processing' => 'Processing',
+            'processing' => 'Processing', 
             'shipped' => 'Shipped',
             'delivered' => 'Delivered',
             'cancelled' => 'Cancelled',
         ];
 
+        // Get order counts by status for quick filters
+        $statusCounts = Order::where('user_id', $user->id)
+            ->selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        // Calculate order statistics
+        $totalOrders = Order::where('user_id', $user->id)->count();
+        $totalSpent = Order::where('user_id', $user->id)
+            ->whereIn('status', ['delivered', 'processing', 'shipped'])
+            ->sum('total');
+        $averageOrderValue = $totalOrders > 0 ? $totalSpent / $totalOrders : 0;
+
+        // Recent quick actions
+        $quickActions = [
+            'pending_orders' => Order::where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->count(),
+            'processing_orders' => Order::where('user_id', $user->id)
+                ->where('status', 'processing')
+                ->count(),
+            'shipped_orders' => Order::where('user_id', $user->id)
+                ->where('status', 'shipped')
+                ->count(),
+        ];
+
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
             'orderStatuses' => $orderStatuses,
-            'filters' => $request->only(['status', 'search']),
+            'statusCounts' => $statusCounts,
+            'filters' => $filters,
+            'orderStats' => [
+                'total_orders' => $totalOrders,
+                'total_spent' => $totalSpent,
+                'average_order_value' => $averageOrderValue,
+            ],
+            'quickActions' => $quickActions,
         ]);
     }
 
@@ -68,11 +142,29 @@ class OrderController extends Controller
         $order->load([
             'items.product.images',
             'statusHistory.changedBy',
-            'invoice'
+            'invoice',
+            'user'
         ]);
+
+        // Enhanced order timeline with real-time tracking
+        $timeline = $this->buildOrderTimeline($order);
+        
+        // Calculate delivery progress
+        $deliveryProgress = $this->calculateDeliveryProgress($order);
+        
+        // Get recommended products for reorder
+        $recommendedProducts = $this->getRecommendedProducts($order);
+        
+        // Calculate estimated delivery if not set
+        if (!$order->estimated_delivery_date && in_array($order->status, ['processing', 'shipped'])) {
+            $order->estimated_delivery_date = $this->calculateEstimatedDelivery($order);
+        }
 
         return Inertia::render('Orders/Show', [
             'order' => $order,
+            'timeline' => $timeline,
+            'deliveryProgress' => $deliveryProgress,
+            'recommendedProducts' => $recommendedProducts,
         ]);
     }
 
@@ -243,5 +335,193 @@ class OrderController extends Controller
         }
 
         return $order->user_id === $user->id;
+    }
+
+    /**
+     * Build enhanced order timeline with real-time tracking
+     */
+    private function buildOrderTimeline(Order $order): array
+    {
+        $timeline = [];
+        $statusFlow = ['pending', 'processing', 'shipped', 'delivered'];
+        
+        // Add status history
+        foreach ($order->statusHistory as $history) {
+            $timeline[] = [
+                'type' => 'status_change',
+                'title' => ucfirst($history->to_status),
+                'description' => $history->comment ?? "Order status updated to " . ucfirst($history->to_status),
+                'timestamp' => $history->created_at,
+                'completed' => true,
+                'icon' => $this->getStatusIcon($history->to_status),
+                'variant' => $this->getStatusVariant($history->to_status),
+            ];
+        }
+
+        // Add expected future steps
+        $currentStatusIndex = array_search($order->status, $statusFlow);
+        if ($currentStatusIndex !== false && $order->status !== 'cancelled') {
+            for ($i = $currentStatusIndex + 1; $i < count($statusFlow); $i++) {
+                $status = $statusFlow[$i];
+                $timeline[] = [
+                    'type' => 'future_step',
+                    'title' => ucfirst($status),
+                    'description' => $this->getStatusDescription($status),
+                    'timestamp' => null,
+                    'completed' => false,
+                    'icon' => $this->getStatusIcon($status),
+                    'variant' => 'secondary',
+                ];
+            }
+        }
+
+        // Sort by timestamp, keeping future steps at the end
+        usort($timeline, function ($a, $b) {
+            if ($a['completed'] && !$b['completed']) return -1;
+            if (!$a['completed'] && $b['completed']) return 1;
+            if ($a['timestamp'] && $b['timestamp']) {
+                return strtotime($b['timestamp']) - strtotime($a['timestamp']);
+            }
+            return 0;
+        });
+
+        return $timeline;
+    }
+
+    /**
+     * Calculate delivery progress percentage
+     */
+    private function calculateDeliveryProgress(Order $order): array
+    {
+        $statusSteps = [
+            'pending' => ['label' => 'Order Placed', 'percentage' => 20],
+            'processing' => ['label' => 'Preparing Order', 'percentage' => 40],
+            'shipped' => ['label' => 'In Transit', 'percentage' => 70],
+            'delivered' => ['label' => 'Delivered', 'percentage' => 100],
+            'cancelled' => ['label' => 'Cancelled', 'percentage' => 0],
+        ];
+
+        $currentStep = $statusSteps[$order->status] ?? $statusSteps['pending'];
+        
+        return [
+            'current_status' => $order->status,
+            'current_label' => $currentStep['label'],
+            'percentage' => $currentStep['percentage'],
+            'steps' => $statusSteps,
+            'estimated_delivery' => $order->estimated_delivery_date,
+            'delivered_at' => $order->delivered_at,
+        ];
+    }
+
+    /**
+     * Get recommended products based on order history
+     */
+    private function getRecommendedProducts(Order $order): array
+    {
+        // Get products from the same categories as ordered items
+        $categoryIds = $order->items()
+            ->with('product.category')
+            ->get()
+            ->pluck('product.category.id')
+            ->filter()
+            ->unique();
+
+        if ($categoryIds->isEmpty()) {
+            return [];
+        }
+
+        $recommendations = \App\Models\Product::with(['images', 'category'])
+            ->whereIn('category_id', $categoryIds)
+            ->where('status', 'published')
+            ->whereNotIn('id', $order->items->pluck('product_id'))
+            ->inRandomOrder()
+            ->limit(4)
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'formatted_price' => '৳' . number_format($product->price, 2),
+                    'image' => $product->images->first()?->image_path ?? '/images/placeholder.jpg',
+                    'category' => $product->category?->name,
+                ];
+            });
+
+        return $recommendations->toArray();
+    }
+
+    /**
+     * Calculate estimated delivery date
+     */
+    private function calculateEstimatedDelivery(Order $order): string
+    {
+        $baseDeliveryDays = 3; // Default 3 business days
+        
+        // Add extra days based on location (simplified logic)
+        $shippingAddress = $order->shipping_address;
+        $extraDays = 0;
+        
+        if (isset($shippingAddress['division'])) {
+            $division = strtolower($shippingAddress['division']);
+            if (in_array($division, ['sylhet', 'chittagong', 'barisal', 'rangpur'])) {
+                $extraDays = 2;
+            } elseif (in_array($division, ['khulna', 'rajshahi'])) {
+                $extraDays = 1;
+            }
+        }
+
+        $deliveryDate = now()->addDays($baseDeliveryDays + $extraDays);
+        
+        // Skip weekends (simple approximation)
+        while ($deliveryDate->isWeekend()) {
+            $deliveryDate->addDay();
+        }
+
+        return $deliveryDate->toDateString();
+    }
+
+    /**
+     * Get status icon for timeline
+     */
+    private function getStatusIcon(string $status): string
+    {
+        return match ($status) {
+            'pending' => 'ClockIcon',
+            'processing' => 'CogIcon',
+            'shipped' => 'TruckIcon',
+            'delivered' => 'CheckCircleIcon',
+            'cancelled' => 'XCircleIcon',
+            default => 'ClockIcon',
+        };
+    }
+
+    /**
+     * Get status variant for timeline
+     */
+    private function getStatusVariant(string $status): string
+    {
+        return match ($status) {
+            'pending' => 'warning',
+            'processing' => 'info',
+            'shipped' => 'secondary',
+            'delivered' => 'success',
+            'cancelled' => 'danger',
+            default => 'secondary',
+        };
+    }
+
+    /**
+     * Get status description for future steps
+     */
+    private function getStatusDescription(string $status): string
+    {
+        return match ($status) {
+            'pending' => 'Your order is being reviewed',
+            'processing' => 'We are preparing your sacred items',
+            'shipped' => 'Your order is on its way to you',
+            'delivered' => 'Your order has been delivered',
+            default => 'Order status will be updated',
+        };
     }
 }

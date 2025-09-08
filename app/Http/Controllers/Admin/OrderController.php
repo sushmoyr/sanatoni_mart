@@ -150,6 +150,9 @@ class OrderController extends Controller
                 'changed_by' => auth()->id(),
             ]);
 
+            // Send status update email
+            $this->sendStatusUpdateEmail($order, $oldStatus, $validated['status']);
+
             // Handle stock restoration for cancelled orders
             if ($validated['status'] === Order::STATUS_CANCELLED && $oldStatus !== Order::STATUS_CANCELLED) {
                 foreach ($order->items as $item) {
@@ -227,6 +230,9 @@ class OrderController extends Controller
             'changed_by' => auth()->id(),
         ]);
 
+        // Send status update email
+        $this->sendStatusUpdateEmail($order, $oldStatus, $validated['status'], $validated['comment']);
+
         // Handle stock restoration/deduction for cancelled orders
         if ($validated['status'] === Order::STATUS_CANCELLED && $oldStatus !== Order::STATUS_CANCELLED) {
             foreach ($order->items as $item) {
@@ -287,6 +293,18 @@ class OrderController extends Controller
     }
 
     /**
+     * Generate and download invoice PDF
+     */
+    public function invoice(Order $order)
+    {
+        $order->load(['user', 'items.product']);
+
+        $pdf = \PDF::loadView('invoices.template', compact('order'));
+        
+        return $pdf->download("invoice-{$order->order_number}.pdf");
+    }
+
+    /**
      * Export orders
      */
     public function export(Request $request, $format = 'csv')
@@ -300,5 +318,25 @@ class OrderController extends Controller
                 'message' => 'Export functionality will be implemented soon.'
             ]
         ]);
+    }
+
+    /**
+     * Send status update email to customer
+     */
+    private function sendStatusUpdateEmail(Order $order, string $oldStatus, string $newStatus, ?string $comment = null)
+    {
+        try {
+            \Illuminate\Support\Facades\Mail::to($order->customer_email)
+                ->send(new \App\Mail\OrderStatusUpdated($order, $oldStatus, $newStatus, $comment));
+        } catch (\Exception $e) {
+            // Log the error but don't fail the operation
+            logger()->error('Failed to send order status update email', [
+                'order_id' => $order->id,
+                'customer_email' => $order->customer_email,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

@@ -23,34 +23,20 @@ export default function CustomerProfileEdit({ auth, user }: CustomerProfileEditP
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        name: user.name,
-        email: user.email,
+        name: user.name || '',
+        email: user.email || '',
         phone: user.phone || '',
-        profile_picture: null as File | null,
-        newsletter: user.preferences?.newsletter || false,
-        notifications: user.preferences?.notifications || false,
-        language: user.preferences?.language || 'en',
+        profile_picture: null,
+        newsletter: false,
+        notifications: true,
+        language: 'en',
         _method: 'PUT'
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        const formData = new FormData();
-        formData.append('name', data.name);
-        formData.append('email', data.email);
-        formData.append('phone', data.phone);
-        formData.append('_method', 'PUT');
-        
-        if (data.profile_picture) {
-            formData.append('profile_picture', data.profile_picture);
-        }
-
-        
-        // Add preferences
-        formData.append('newsletter', data.newsletter.toString());
-        formData.append('notifications', data.notifications.toString());
-        formData.append('language', data.language);        post(route('customer.profile.update'), {
+        post(route('customer.profile.update'), {
             forceFormData: true,
             onSuccess: () => {
                 setPreviewImage(null);
@@ -62,7 +48,7 @@ export default function CustomerProfileEdit({ auth, user }: CustomerProfileEditP
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setData('profile_picture', file);
+            setData('profile_picture', file as any);
             
             // Create preview
             const reader = new FileReader();

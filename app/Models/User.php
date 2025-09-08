@@ -277,4 +277,12 @@ class User extends Authenticatable
     {
         return $this->cartItems()->where('product_id', $productId)->exists();
     }
+
+    /**
+     * Orders relationship
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

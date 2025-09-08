@@ -26,12 +26,16 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
     Route::put('products/update-image', [ProductController::class, 'updateImage'])->name('products.update-image');
     
     // Reports
+    Route::get('reports/dashboard', [ReportController::class, 'dashboard'])->name('reports.dashboard');
+    Route::get('reports/sales', [ReportController::class, 'salesOverview'])->name('reports.sales');
+    Route::get('reports/orders', [ReportController::class, 'orderAnalytics'])->name('reports.orders');
     Route::get('reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
     Route::get('reports/inventory-alerts', [ReportController::class, 'inventoryAlerts'])->name('reports.inventory-alerts');
     
     // Order Management - Admin and Manager
     Route::resource('orders', OrderController::class)->except(['store']);
     Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
     Route::get('orders/export/{format}', [OrderController::class, 'export'])->name('orders.export');
     
     // User Management - Admin only

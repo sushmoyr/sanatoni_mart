@@ -12,7 +12,11 @@ import {
     EyeIcon,
     ClockIcon,
     CheckCircleIcon,
-    CreditCardIcon 
+    CreditCardIcon,
+    CogIcon,
+    XCircleIcon,
+    MapPinIcon,
+    CalendarIcon
 } from '@heroicons/react/24/outline';
 
 interface OrderItem {
@@ -49,6 +53,34 @@ interface Invoice {
     generated_at: string;
 }
 
+interface TimelineItem {
+    type: 'status_change' | 'future_step';
+    title: string;
+    description: string;
+    timestamp: string | null;
+    completed: boolean;
+    icon: string;
+    variant: string;
+}
+
+interface DeliveryProgress {
+    current_status: string;
+    current_label: string;
+    percentage: number;
+    steps: Record<string, { label: string; percentage: number }>;
+    estimated_delivery: string | null;
+    delivered_at: string | null;
+}
+
+interface RecommendedProduct {
+    id: number;
+    name: string;
+    price: number;
+    formatted_price: string;
+    image: string;
+    category: string;
+}
+
 interface Order {
     id: number;
     order_number: string;
@@ -83,9 +115,12 @@ interface Order {
 
 interface Props extends PageProps {
     order: Order;
+    timeline: TimelineItem[];
+    deliveryProgress: DeliveryProgress;
+    recommendedProducts: RecommendedProduct[];
 }
 
-export default function OrderShow({ auth, order }: Props) {
+export default function OrderShow({ auth, order, timeline, deliveryProgress, recommendedProducts }: Props) {
     const handleCancel = () => {
         if (confirm('Are you sure you want to cancel this order?')) {
             router.post(route('orders.cancel', order.id));
@@ -106,6 +141,27 @@ export default function OrderShow({ auth, order }: Props) {
             address.postal_code,
         ].filter(Boolean);
         return parts.join(', ');
+    };
+
+    const getStatusIcon = (iconName: string) => {
+        switch (iconName) {
+            case 'ClockIcon': return <ClockIcon className="w-5 h-5" />;
+            case 'CogIcon': return <CogIcon className="w-5 h-5" />;
+            case 'TruckIcon': return <TruckIcon className="w-5 h-5" />;
+            case 'CheckCircleIcon': return <CheckCircleIcon className="w-5 h-5" />;
+            case 'XCircleIcon': return <XCircleIcon className="w-5 h-5" />;
+            default: return <ClockIcon className="w-5 h-5" />;
+        }
+    };
+
+    const getStatusColor = (variant: string) => {
+        switch (variant) {
+            case 'success': return 'text-green-600 bg-green-100';
+            case 'danger': return 'text-red-600 bg-red-100';
+            case 'warning': return 'text-yellow-600 bg-yellow-100';
+            case 'info': return 'text-blue-600 bg-blue-100';
+            default: return 'text-gray-600 bg-gray-100';
+        }
     };
 
     return (
@@ -148,6 +204,81 @@ export default function OrderShow({ auth, order }: Props) {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Order Details */}
                         <div className="lg:col-span-2 space-y-6">
+                            {/* Real-time Order Tracking */}
+                            <Card className="p-6 devotional-border">
+                                <h3 className="text-xl font-serif font-semibold text-semantic-text mb-6">Order Tracking</h3>
+                                
+                                {/* Progress Bar */}
+                                <div className="mb-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm font-medium text-semantic-text">{deliveryProgress.current_label}</span>
+                                        <span className="text-sm text-semantic-textSub">{deliveryProgress.percentage}% Complete</span>
+                                    </div>
+                                    <div className="w-full bg-neutral-200 rounded-full h-3">
+                                        <div 
+                                            className="bg-gradient-to-r from-brand-500 to-brand-600 h-3 rounded-full transition-all duration-300" 
+                                            style={{ width: `${deliveryProgress.percentage}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+
+                                {/* Delivery Estimate */}
+                                {deliveryProgress.estimated_delivery && !deliveryProgress.delivered_at && (
+                                    <div className="mb-6 p-4 bg-info-50 border border-info-200 rounded-lg">
+                                        <div className="flex items-center">
+                                            <CalendarIcon className="h-5 w-5 text-info-600 mr-3" />
+                                            <div>
+                                                <div className="font-semibold text-info-800">Estimated Delivery</div>
+                                                <div className="text-sm text-info-700">
+                                                    {new Date(deliveryProgress.estimated_delivery).toLocaleDateString('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Timeline */}
+                                <div className="space-y-4">
+                                    {timeline.map((item, index) => (
+                                        <div key={index} className="flex items-start space-x-4">
+                                            <div className={`p-2 rounded-full ${item.completed ? getStatusColor(item.variant) : 'bg-neutral-100 text-neutral-400'}`}>
+                                                {getStatusIcon(item.icon)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center space-x-2">
+                                                    <h4 className={`font-semibold ${item.completed ? 'text-semantic-text' : 'text-semantic-textSub'}`}>
+                                                        {item.title}
+                                                    </h4>
+                                                    {item.completed && (
+                                                        <Badge variant={item.variant as any}>
+                                                            Completed
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <p className={`text-sm mt-1 ${item.completed ? 'text-semantic-text' : 'text-semantic-textSub'}`}>
+                                                    {item.description}
+                                                </p>
+                                                {item.timestamp && (
+                                                    <p className="text-xs text-semantic-textSub mt-2">
+                                                        {new Date(item.timestamp).toLocaleDateString('en-US', {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+
                             {/* Order Items */}
                             <Card className="p-6 devotional-border">
                                 <h3 className="text-xl font-serif font-semibold text-semantic-text mb-6">Sacred Items</h3>
@@ -181,40 +312,32 @@ export default function OrderShow({ auth, order }: Props) {
                                 </div>
                             </Card>
 
-                            {/* Order Status History */}
-                            <Card className="p-6 devotional-border">
-                                <h3 className="text-xl font-serif font-semibold text-semantic-text mb-6">Order Journey</h3>
-                                <div className="space-y-4">
-                                    {order.status_history.map((history, index) => (
-                                        <div key={history.id} className="flex items-start space-x-4">
-                                            <div className={`w-3 h-3 rounded-full mt-2 ${
-                                                index === 0 ? 'bg-brand-500' : 'bg-neutral-300'
-                                            }`} />
-                                            <div className="flex-1">
-                                                <div className="flex items-center space-x-2">
-                                                    <Badge variant={index === 0 ? 'default' : 'secondary'}>
-                                                        {history.formatted_change}
-                                                    </Badge>
-                                                    <span className="text-sm text-semantic-textSub">
-                                                        by {history.changed_by_name}
-                                                    </span>
+                            {/* Recommended Products */}
+                            {recommendedProducts.length > 0 && (
+                                <Card className="p-6 devotional-border">
+                                    <h3 className="text-xl font-serif font-semibold text-semantic-text mb-6">You might also like</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {recommendedProducts.map((product) => (
+                                            <Link key={product.id} href={route('products.show', product.id)}>
+                                                <div className="group cursor-pointer">
+                                                    <img
+                                                        src={product.image}
+                                                        alt={product.name}
+                                                        className="w-full h-32 object-cover rounded-lg shadow-e1 group-hover:shadow-e2 transition-shadow"
+                                                    />
+                                                    <div className="mt-2">
+                                                        <h4 className="font-medium text-semantic-text text-sm truncate group-hover:text-brand-600">
+                                                            {product.name}
+                                                        </h4>
+                                                        <p className="text-xs text-semantic-textSub">{product.category}</p>
+                                                        <p className="text-sm font-bold text-brand-600 mt-1">{product.formatted_price}</p>
+                                                    </div>
                                                 </div>
-                                                {history.comment && (
-                                                    <p className="text-sm text-semantic-text mt-2 p-3 bg-neutral-50 rounded">{history.comment}</p>
-                                                )}
-                                                <p className="text-xs text-semantic-textSub mt-2">
-                                                    {new Date(history.created_at).toLocaleDateString('en-US', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </Card>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </Card>
+                            )}
 
                             {/* Order Notes */}
                             {order.notes && (
@@ -262,33 +385,29 @@ export default function OrderShow({ auth, order }: Props) {
                             <Card className="p-6 devotional-border">
                                 <h3 className="text-xl font-serif font-semibold text-semantic-text mb-6">Delivery Address</h3>
                                 <div className="text-sm">
-                                    <p className="font-semibold text-semantic-text">{order.shipping_address.name}</p>
-                                    <p className="text-semantic-textSub">{order.shipping_address.phone}</p>
-                                    <p className="text-semantic-text mt-3 leading-relaxed">{formatAddress(order.shipping_address)}</p>
-                                </div>
-
-                                {order.estimated_delivery_date && (
-                                    <div className="mt-6 p-4 bg-info-50 border border-info-200 rounded-lg">
-                                        <div className="flex items-center">
-                                            <TruckIcon className="h-5 w-5 text-info-600 mr-2" />
-                                            <div>
-                                                <div className="font-semibold text-info-800">Estimated Delivery</div>
-                                                <div className="text-sm text-info-700">
-                                                    {new Date(order.estimated_delivery_date).toLocaleDateString()}
-                                                </div>
-                                            </div>
+                                    <div className="flex items-start space-x-3 mb-4">
+                                        <MapPinIcon className="h-5 w-5 text-brand-600 mt-1 flex-shrink-0" />
+                                        <div>
+                                            <p className="font-semibold text-semantic-text">{order.shipping_address.name}</p>
+                                            <p className="text-semantic-textSub">{order.shipping_address.phone}</p>
+                                            <p className="text-semantic-text mt-2 leading-relaxed">{formatAddress(order.shipping_address)}</p>
                                         </div>
                                     </div>
-                                )}
+                                </div>
 
                                 {order.delivered_at && (
                                     <div className="mt-6 p-4 bg-success-50 border border-success-200 rounded-lg">
                                         <div className="flex items-center">
                                             <CheckCircleIcon className="h-5 w-5 text-success-600 mr-2" />
                                             <div>
-                                                <div className="font-semibold text-success-800">Delivered</div>
+                                                <div className="font-semibold text-success-800">Delivered Successfully</div>
                                                 <div className="text-sm text-success-700">
-                                                    {new Date(order.delivered_at).toLocaleDateString()}
+                                                    {new Date(order.delivered_at).toLocaleDateString('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
                                                 </div>
                                             </div>
                                         </div>
@@ -323,17 +442,17 @@ export default function OrderShow({ auth, order }: Props) {
 
                             {/* Actions */}
                             <Card className="p-6 devotional-border">
-                                <h3 className="text-xl font-serif font-semibold text-semantic-text mb-6">Order Actions</h3>
+                                <h3 className="text-xl font-serif font-semibold text-semantic-text mb-6">Quick Actions</h3>
                                 <div className="space-y-3">
-                                    <Button variant="secondary" className="w-full" onClick={handleReorder}>
+                                    <Button variant="primary" className="w-full" onClick={handleReorder}>
                                         <ArrowPathIcon className="h-4 w-4 mr-2" />
-                                        Reorder Items
+                                        Reorder All Items
                                     </Button>
 
                                     {order.can_be_cancelled && (
                                         <Button 
-                                            variant="ghost" 
-                                            className="w-full text-danger-600 hover:text-danger-700 hover:bg-danger-50" 
+                                            variant="destructive" 
+                                            className="w-full" 
                                             onClick={handleCancel}
                                         >
                                             <XMarkIcon className="h-4 w-4 mr-2" />
@@ -341,10 +460,17 @@ export default function OrderShow({ auth, order }: Props) {
                                         </Button>
                                     )}
 
-                                    <Button variant="tertiary" className="w-full" asChild>
+                                    <Button variant="secondary" className="w-full" asChild>
                                         <Link href={route('orders.track-form')}>
                                             <TruckIcon className="h-4 w-4 mr-2" />
-                                            Track Order
+                                            Track as Guest
+                                        </Link>
+                                    </Button>
+
+                                    <Button variant="secondary" className="w-full" asChild>
+                                        <Link href={route('orders.index')}>
+                                            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                                            View All Orders
                                         </Link>
                                     </Button>
                                 </div>
