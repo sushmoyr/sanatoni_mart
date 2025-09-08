@@ -229,4 +229,52 @@ class User extends Authenticatable
             'last_login_ip' => $ipAddress ?? request()->ip(),
         ]);
     }
+
+    /**
+     * Customer addresses relationship
+     */
+    public function addresses()
+    {
+        return $this->hasMany(CustomerAddress::class);
+    }
+
+    /**
+     * Default customer address
+     */
+    public function defaultAddress()
+    {
+        return $this->hasOne(CustomerAddress::class)->where('is_default', true);
+    }
+
+    /**
+     * Wishlist items relationship
+     */
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    /**
+     * Shopping cart items relationship
+     */
+    public function cartItems()
+    {
+        return $this->hasMany(ShoppingCart::class);
+    }
+
+    /**
+     * Check if product is in user's wishlist
+     */
+    public function hasInWishlist(int $productId): bool
+    {
+        return $this->wishlists()->where('product_id', $productId)->exists();
+    }
+
+    /**
+     * Check if product is in user's cart
+     */
+    public function hasInCart(int $productId): bool
+    {
+        return $this->cartItems()->where('product_id', $productId)->exists();
+    }
 }

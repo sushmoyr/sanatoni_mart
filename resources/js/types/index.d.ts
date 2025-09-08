@@ -25,12 +25,55 @@ export interface User {
     status: 'active' | 'inactive' | 'banned';
     email_verified_at?: string;
     last_login_at?: string;
+    preferences?: Record<string, any>;
     roles: Role[];
     permissions: string[];
     is_admin: boolean;
     is_manager: boolean;
     is_salesperson: boolean;
     has_admin_access: boolean;
+    // Customer-specific relationships
+    addresses?: CustomerAddress[];
+    wishlists?: Wishlist[];
+    cart_items?: ShoppingCart[];
+}
+
+export interface CustomerAddress {
+    id: number;
+    user_id: number;
+    type: 'home' | 'work' | 'other';
+    name?: string;
+    address_line_1: string;
+    address_line_2?: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+    is_default: boolean;
+    created_at: string;
+    updated_at: string;
+    full_address?: string;
+}
+
+export interface Wishlist {
+    id: number;
+    user_id: number;
+    product_id: number;
+    created_at: string;
+    updated_at: string;
+    product?: Product;
+}
+
+export interface ShoppingCart {
+    id: number;
+    session_id?: string;
+    user_id?: number;
+    product_id: number;
+    quantity: number;
+    created_at: string;
+    updated_at: string;
+    product?: Product;
+    total_price?: number;
 }
 
 export interface PaginationLink {
@@ -77,7 +120,7 @@ export interface ProductImage {
     image_path: string;
     alt_text?: string;
     sort_order: number;
-    is_primary: boolean;
+    is_main: boolean;
     created_at: string;
     updated_at: string;
 }
