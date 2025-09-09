@@ -57,6 +57,29 @@ return [
         ],
     ],
 
+    // Alias for compatibility
+    'languages' => [
+        'en' => [
+            'name' => 'English',
+            'native_name' => 'English',
+            'flag' => '🇺🇸',
+            'direction' => 'ltr',
+            'date_format' => 'M j, Y',
+            'currency' => 'USD',
+        ],
+        'bn' => [
+            'name' => 'Bengali',
+            'native_name' => 'বাংলা',
+            'flag' => '🇧🇩',
+            'direction' => 'ltr',
+            'date_format' => 'j F, Y',
+            'currency' => 'BDT',
+        ],
+    ],
+
+    // Supported language codes
+    'supported_languages' => ['en', 'bn'],
+
     /*
     |--------------------------------------------------------------------------
     | Locale Detection

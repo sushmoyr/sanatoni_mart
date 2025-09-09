@@ -35,7 +35,7 @@ class LocalizationMiddleware
      */
     private function getLocale(Request $request): string
     {
-        $supportedLocales = config('locale.supported_languages', ['en']);
+        $supportedLocales = array_keys(config('locale.supported', []));
         $defaultLocale = config('app.locale', 'en');
         $detectionOrder = config('locale.detection_order', ['user', 'session', 'header', 'url']);
         
@@ -106,7 +106,7 @@ class LocalizationMiddleware
         
         // Parse Accept-Language header
         $languages = explode(',', $acceptLanguage);
-        $supportedLocales = config('locale.supported_languages', ['en']);
+        $supportedLocales = array_keys(config('locale.supported', []));
         
         foreach ($languages as $language) {
             $locale = trim(explode(';', $language)[0]);
@@ -152,7 +152,7 @@ class LocalizationMiddleware
         
         if (count($parts) >= 2) {
             $subdomain = $parts[0];
-            $supportedLocales = config('locale.supported_languages', ['en']);
+            $supportedLocales = array_keys(config('locale.supported', []));
             
             if (in_array($subdomain, $supportedLocales)) {
                 return $subdomain;
@@ -171,7 +171,7 @@ class LocalizationMiddleware
         $segments = explode('/', $path);
         
         if (!empty($segments[0])) {
-            $supportedLocales = config('locale.supported_languages', ['en']);
+            $supportedLocales = array_keys(config('locale.supported', []));
             
             if (in_array($segments[0], $supportedLocales)) {
                 return $segments[0];

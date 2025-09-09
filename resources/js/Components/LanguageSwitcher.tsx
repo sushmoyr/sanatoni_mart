@@ -24,6 +24,25 @@ export default function LanguageSwitcher({
 }: LanguageSwitcherProps) {
     const [isLoading, setIsLoading] = useState(false);
 
+    // Debug logging
+    console.log('LanguageSwitcher props:', {
+        currentLocale,
+        availableLanguages,
+        availableLanguagesType: typeof availableLanguages,
+        availableLanguagesKeys: availableLanguages ? Object.keys(availableLanguages) : 'undefined'
+    });
+
+    // Add safety checks
+    if (!currentLocale || !availableLanguages) {
+        console.log('LanguageSwitcher: Missing props, not rendering');
+        return null;
+    }
+
+    if (typeof availableLanguages !== 'object' || Object.keys(availableLanguages).length === 0) {
+        console.log('LanguageSwitcher: Invalid availableLanguages data, not rendering');
+        return null;
+    }
+
     const currentLanguage = availableLanguages[currentLocale];
 
     const handleLanguageSwitch = (locale: string) => {

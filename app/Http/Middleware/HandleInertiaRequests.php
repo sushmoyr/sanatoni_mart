@@ -66,8 +66,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'locale' => app()->getLocale(),
             'translations' => $this->getTranslations(),
-            'available_languages' => config('locale.languages', []),
-            'supported_locales' => config('locale.supported_languages', ['en']),
+            'available_languages' => config('locale.supported', []),
+            'supported_locales' => array_keys(config('locale.supported', [])),
         ];
     }
 

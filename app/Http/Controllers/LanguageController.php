@@ -14,7 +14,7 @@ class LanguageController extends Controller
     public function switch(Request $request): RedirectResponse
     {
         $locale = $request->input('locale');
-        $supportedLocales = config('locale.supported_languages', ['en']);
+        $supportedLocales = array_keys(config('locale.supported', []));
         
         if (!in_array($locale, $supportedLocales)) {
             return back()->withErrors(['locale' => 'Unsupported language.']);
@@ -42,8 +42,8 @@ class LanguageController extends Controller
      */
     public function available()
     {
-        $languages = config('locale.languages', []);
-        $supportedLocales = config('locale.supported_languages', ['en']);
+        $languages = config('locale.supported', []);
+        $supportedLocales = array_keys($languages);
         
         $availableLanguages = [];
         foreach ($supportedLocales as $locale) {
@@ -85,7 +85,7 @@ class LanguageController extends Controller
         }
         
         $request->validate([
-            'locale' => 'required|string|in:' . implode(',', config('locale.supported_languages', ['en'])),
+            'locale' => 'required|string|in:' . implode(',', array_keys(config('locale.supported', []))),
             'timezone' => 'nullable|string',
             'date_format' => 'nullable|string',
             'currency' => 'nullable|string',

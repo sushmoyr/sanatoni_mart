@@ -74,15 +74,19 @@ class LanguageSetting extends Model
     public static function getForUser(int $userId, string $locale = null): static
     {
         $locale = $locale ?: config('app.locale');
+        
+        // Get language-specific settings from config
+        $languages = config('locale.supported', []);
+        $langConfig = $languages[$locale] ?? $languages['en'] ?? [];
 
         return static::firstOrCreate(
             ['user_id' => $userId, 'locale' => $locale],
             [
                 'is_default' => true,
-                'timezone' => config('app.timezone'),
-                'date_format' => config('locale.date_format'),
-                'currency' => config('locale.currency'),
-                'rtl' => in_array($locale, config('locale.rtl_languages', [])),
+                'timezone' => config('app.timezone', 'UTC'),
+                'date_format' => $langConfig['date_format'] ?? 'M j, Y',
+                'currency' => $langConfig['currency'] ?? 'USD',
+                'rtl' => ($langConfig['direction'] ?? 'ltr') === 'rtl',
             ]
         );
     }

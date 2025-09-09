@@ -1,13 +1,8 @@
 import { usePage } from '@inertiajs/react';
-import { PageProps as InertiaPageProps } from '@/types';
+import { PageProps } from '@/types';
 
 interface TranslationData {
     [key: string]: string | TranslationData;
-}
-
-interface PageProps extends InertiaPageProps {
-    translations?: TranslationData;
-    locale?: string;
 }
 
 /**

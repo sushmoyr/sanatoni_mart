@@ -44,7 +44,7 @@ if (!function_exists('set_locale')) {
      */
     function set_locale(string $locale): void
     {
-        $supportedLocales = config('locale.supported_languages', ['en']);
+        $supportedLocales = array_keys(config('locale.supported', []));
         
         if (in_array($locale, $supportedLocales)) {
             app()->setLocale($locale);
@@ -64,7 +64,7 @@ if (!function_exists('get_available_locales')) {
      */
     function get_available_locales(): array
     {
-        return config('locale.supported_languages', ['en']);
+        return array_keys(config('locale.supported', []));
     }
 }
 
@@ -75,7 +75,7 @@ if (!function_exists('get_locale_name')) {
     function get_locale_name(string $locale = null): string
     {
         $locale = $locale ?: app()->getLocale();
-        $languages = config('locale.languages', []);
+        $languages = config('locale.supported', []);
         
         return $languages[$locale]['name'] ?? $locale;
     }
