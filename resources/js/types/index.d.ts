@@ -156,6 +156,18 @@ export interface Product {
     images?: ProductImage[];
 }
 
+export interface Language {
+    code: string;
+    name: string;
+    native_name: string;
+    flag?: string;
+    rtl?: boolean;
+}
+
+export interface TranslationData {
+    [key: string]: string | TranslationData;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
@@ -163,4 +175,8 @@ export type PageProps<
         user: User | null;
     };
     ziggy: Config & { location: string };
+    locale: string;
+    translations: TranslationData;
+    available_languages: Record<string, Language>;
+    supported_locales: string[];
 };

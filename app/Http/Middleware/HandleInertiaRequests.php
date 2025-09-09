@@ -64,6 +64,18 @@ class HandleInertiaRequests extends Middleware
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
+            'locale' => app()->getLocale(),
+            'translations' => $this->getTranslations(),
+            'available_languages' => config('locale.languages', []),
+            'supported_locales' => config('locale.supported_languages', ['en']),
         ];
+    }
+
+    /**
+     * Get translations for the current locale
+     */
+    private function getTranslations(): array
+    {
+        return app(\App\Services\TranslationService::class)->getAllGrouped();
     }
 }

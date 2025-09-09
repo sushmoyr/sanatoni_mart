@@ -2,14 +2,17 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
+import { PageProps } from '@/types';
 
 export default function Authenticated({
     header,
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
-    const user = usePage().props.auth.user;
+    const { auth, locale, available_languages } = usePage<PageProps>().props;
+    const user = auth.user;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
@@ -42,7 +45,12 @@ export default function Authenticated({
                             </div>
                         </div>
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
+                        <div className="hidden sm:ms-6 sm:flex sm:items-center space-x-4">
+                            <LanguageSwitcher 
+                                currentLocale={locale}
+                                availableLanguages={available_languages}
+                                className=""
+                            />
                             <div className="relative ms-3">
                                 <Dropdown>
                                     <Dropdown.Trigger>
@@ -152,6 +160,13 @@ export default function Authenticated({
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">
+                        <div className="px-4 mb-4">
+                            <LanguageSwitcher 
+                                currentLocale={locale}
+                                availableLanguages={available_languages}
+                                className="w-full"
+                            />
+                        </div>
                         <div className="px-4">
                             <div className="text-base font-medium text-gray-800">
                                 {user?.name}

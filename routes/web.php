@@ -101,3 +101,81 @@ Route::middleware(['auth'])->group(function () {
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
+
+// Public Content Routes
+Route::get('/pages/{page:slug}', [App\Http\Controllers\PageController::class, 'show'])->name('pages.show');
+Route::get('/pages/{page:slug}/preview', [App\Http\Controllers\PageController::class, 'preview'])->name('pages.preview');
+
+// Public Blog Routes  
+Route::get('/blog', [App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{post:slug}', [App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+Route::get('/blog/category/{category:slug}', [App\Http\Controllers\BlogController::class, 'byCategory'])->name('blog.category');
+Route::get('/blog/tag/{tag:slug}', [App\Http\Controllers\BlogController::class, 'byTag'])->name('blog.tag');
+
+// Admin Content Management Routes
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
+    
+    // Media Management
+    Route::resource('media', App\Http\Controllers\Admin\MediaController::class);
+    Route::post('media/bulk-action', [App\Http\Controllers\Admin\MediaController::class, 'bulkAction'])->name('media.bulk-action');
+    Route::post('media/{media}/generate-thumbnail', [App\Http\Controllers\Admin\MediaController::class, 'generateThumbnail'])->name('media.generate-thumbnail');
+    Route::get('media-selection', [App\Http\Controllers\Admin\MediaController::class, 'selection'])->name('media.selection');
+    
+    // Page Management
+    Route::resource('pages', App\Http\Controllers\Admin\PageController::class);
+    Route::post('pages/bulk-action', [App\Http\Controllers\Admin\PageController::class, 'bulkAction'])->name('pages.bulk-action');
+    Route::post('pages/{page}/duplicate', [App\Http\Controllers\Admin\PageController::class, 'duplicate'])->name('pages.duplicate');
+    Route::get('pages/{page}/preview', [App\Http\Controllers\Admin\PageController::class, 'preview'])->name('pages.preview');
+    Route::post('pages/{page}/export', [App\Http\Controllers\Admin\PageController::class, 'export'])->name('pages.export');
+    Route::post('pages/import', [App\Http\Controllers\Admin\PageController::class, 'import'])->name('pages.import');
+    
+    // Page Sections API
+    Route::prefix('pages/{page}/sections')->name('pages.sections.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\PageController::class, 'getSections'])->name('index');
+        Route::post('/', [App\Http\Controllers\Admin\PageController::class, 'addSection'])->name('store');
+        Route::put('/{section}', [App\Http\Controllers\Admin\PageController::class, 'updateSection'])->name('update');
+        Route::delete('/{section}', [App\Http\Controllers\Admin\PageController::class, 'deleteSection'])->name('destroy');
+        Route::post('/reorder', [App\Http\Controllers\Admin\PageController::class, 'reorderSections'])->name('reorder');
+    });
+    
+    // Blog Management
+    Route::resource('blog', App\Http\Controllers\Admin\BlogController::class);
+    Route::post('blog/bulk-action', [App\Http\Controllers\Admin\BlogController::class, 'bulkAction'])->name('blog.bulk-action');
+    Route::post('blog/{post}/duplicate', [App\Http\Controllers\Admin\BlogController::class, 'duplicate'])->name('blog.duplicate');
+    Route::get('blog/{post}/preview', [App\Http\Controllers\Admin\BlogController::class, 'preview'])->name('blog.preview');
+    Route::get('blog/statistics', [App\Http\Controllers\Admin\BlogController::class, 'statistics'])->name('blog.statistics');
+    
+    // Blog Categories
+    Route::resource('blog-categories', App\Http\Controllers\Admin\BlogCategoryController::class)->names([
+        'index' => 'blog.categories.index',
+        'create' => 'blog.categories.create',
+        'store' => 'blog.categories.store',
+        'show' => 'blog.categories.show',
+        'edit' => 'blog.categories.edit',
+        'update' => 'blog.categories.update',
+        'destroy' => 'blog.categories.destroy'
+    ]);
+    Route::post('blog-categories/bulk-action', [App\Http\Controllers\Admin\BlogCategoryController::class, 'bulkAction'])->name('blog.categories.bulk-action');
+    Route::post('blog-categories/reorder', [App\Http\Controllers\Admin\BlogCategoryController::class, 'reorder'])->name('blog.categories.reorder');
+    Route::get('blog-categories/{category}/statistics', [App\Http\Controllers\Admin\BlogCategoryController::class, 'statistics'])->name('blog.categories.statistics');
+    Route::get('blog-categories-api', [App\Http\Controllers\Admin\BlogCategoryController::class, 'api'])->name('blog.categories.api');
+    
+    // SEO Management
+    Route::prefix('seo')->name('seo.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\SeoController::class, 'index'])->name('index');
+        Route::post('/analyze', [App\Http\Controllers\Admin\SeoController::class, 'analyze'])->name('analyze');
+        Route::post('/update-settings', [App\Http\Controllers\Admin\SeoController::class, 'updateSettings'])->name('update-settings');
+        Route::post('/generate-sitemap', [App\Http\Controllers\Admin\SeoController::class, 'generateSitemap'])->name('generate-sitemap');
+        Route::post('/preview-meta', [App\Http\Controllers\Admin\SeoController::class, 'previewMeta'])->name('preview-meta');
+        Route::post('/optimize', [App\Http\Controllers\Admin\SeoController::class, 'optimize'])->name('optimize');
+    });
+    
+});
+
+// Language switching routes
+Route::prefix('language')->name('language.')->group(function () {
+    Route::post('/switch', [App\Http\Controllers\LanguageController::class, 'switch'])->name('switch');
+    Route::get('/available', [App\Http\Controllers\LanguageController::class, 'available'])->name('available');
+    Route::get('/settings', [App\Http\Controllers\LanguageController::class, 'settings'])->name('settings');
+    Route::post('/settings', [App\Http\Controllers\LanguageController::class, 'updateSettings'])->name('settings.update');
+});

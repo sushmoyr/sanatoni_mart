@@ -7,6 +7,7 @@ import { Badge } from '@/Components/ui/Badge';
 import { Input } from '@/Components/ui/Input';
 import { Avatar } from '@/Components/ui/Avatar';
 import Dropdown from '@/Components/Dropdown';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import { cn } from '@/lib/utils';
 import {
     ShoppingCartIcon,
@@ -31,7 +32,7 @@ interface FlashMessage {
 }
 
 export default function BrandedStoreLayout({ children, title = 'Sanatoni Mart', description }: BrandedStoreLayoutProps) {
-    const { auth, flash } = usePage<PageProps & { flash?: FlashMessage }>().props;
+    const { auth, flash, locale, available_languages } = usePage<PageProps & { flash?: FlashMessage }>().props;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const navigation = [
@@ -115,6 +116,13 @@ export default function BrandedStoreLayout({ children, title = 'Sanatoni Mart', 
 
                             {/* User Actions */}
                             <div className="flex items-center space-x-3">
+                                {/* Language Switcher */}
+                                <LanguageSwitcher 
+                                    currentLocale={locale}
+                                    availableLanguages={available_languages}
+                                    className=""
+                                />
+
                                 {/* Wishlist */}
                                 {auth.user && (
                                     <Link
