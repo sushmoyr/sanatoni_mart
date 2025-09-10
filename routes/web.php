@@ -22,6 +22,14 @@ Route::get('/', function () {
     ]);
 })->name('welcome');
 
+// Admin panel redirect
+Route::get('/admin', function () {
+    if (auth()->check() && auth()->user()->hasRole(['admin', 'manager'])) {
+        return redirect('/admin/dashboard');
+    }
+    return redirect('/admin/login');
+})->name('admin.redirect');
+
 // Public product browsing routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');

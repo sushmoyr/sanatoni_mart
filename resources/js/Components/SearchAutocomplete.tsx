@@ -84,8 +84,8 @@ export default function SearchAutocomplete({
         if (onSearch) {
             onSearch(query);
         } else {
-            // Default behavior: navigate to search page
-            window.location.href = `/search/products?search=${encodeURIComponent(query)}`;
+            // Default behavior: navigate to products page with search
+            window.location.href = `/products?search=${encodeURIComponent(query)}`;
         }
     };
 

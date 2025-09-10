@@ -180,4 +180,7 @@ return [
     'price_match_request' => 'মূল্য মিলানোর অনুরোধ',
     'report_issue' => 'সমস্যার রিপোর্ট',
     'suggest_improvement' => 'উন্নতির পরামর্শ',
+    
+    // Collection descriptions
+    'collection_description' => 'আমাদের নিবেদিতভাবে তৈরি সংগ্রহ আবিষ্কার করুন - খাঁটি ধর্মীয় পণ্য, ভক্তিভরে হস্তনির্মিত এবং পবিত্রতায় আশীর্বাদপ্রাপ্ত।',
 ];

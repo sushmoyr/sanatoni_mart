@@ -28,7 +28,7 @@ export default function StoreLayout({ children, title = 'Sanatoni Mart', descrip
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            // Navigate to search results
+            // Navigate to products page with search
             window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`;
         }
     };

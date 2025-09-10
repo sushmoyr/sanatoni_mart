@@ -38,10 +38,14 @@ class WishlistController extends Controller
 
         // Check if already in wishlist
         if ($user->hasInWishlist($productId)) {
-            return response()->json([
-                'message' => 'Product is already in your wishlist',
-                'inWishlist' => true
-            ], 409);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Product is already in your wishlist',
+                    'inWishlist' => true
+                ], 409);
+            }
+            
+            return back()->with('error', 'Product is already in your wishlist');
         }
 
         // Add to wishlist
@@ -49,11 +53,15 @@ class WishlistController extends Controller
             'product_id' => $productId
         ]);
 
-        return response()->json([
-            'message' => 'Product added to wishlist',
-            'inWishlist' => true,
-            'wishlistItem' => $wishlistItem
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Product added to wishlist',
+                'inWishlist' => true,
+                'wishlistItem' => $wishlistItem
+            ]);
+        }
+
+        return back()->with('success', 'Product added to wishlist');
     }
 
     /**
@@ -68,10 +76,14 @@ class WishlistController extends Controller
 
         $wishlist->delete();
 
-        return response()->json([
-            'message' => 'Product removed from wishlist',
-            'inWishlist' => false
-        ]);
+        if (request()->expectsJson()) {
+            return response()->json([
+                'message' => 'Product removed from wishlist',
+                'inWishlist' => false
+            ]);
+        }
+
+        return back()->with('success', 'Product removed from wishlist');
     }
 
     /**

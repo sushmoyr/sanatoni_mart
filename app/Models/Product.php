@@ -83,4 +83,13 @@ class Product extends Model
     {
         return '₹' . number_format($this->display_price, 2);
     }
+
+    /**
+     * Get the route key for the model.
+     * This makes Laravel use 'slug' instead of 'id' for route model binding
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 }

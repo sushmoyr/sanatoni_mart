@@ -4,6 +4,7 @@ import BrandedStoreLayout from '@/Layouts/BrandedStoreLayout';
 import { Product, Category, PageProps } from '@/types';
 import { ProductCard, Input, Button, Badge, Card } from '@/Components/ui';
 import SearchAutocomplete from '@/Components/SearchAutocomplete';
+import { useTranslation } from '@/hooks/useTranslation';
 import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 interface ProductsIndexProps extends PageProps {
@@ -24,6 +25,7 @@ interface ProductsIndexProps extends PageProps {
 }
 
 export default function ProductsIndex({ auth, products, categories = [], filters = {} }: ProductsIndexProps) {
+    const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters.category || '');
     const [minPrice, setMinPrice] = useState(filters.min_price || '');
@@ -72,11 +74,10 @@ export default function ProductsIndex({ auth, products, categories = [], filters
                     {/* Header */}
                     <div className="mb-8 text-center">
                         <h1 className="text-4xl font-serif font-bold text-semantic-text mb-4">
-                            Sacred Products
+                            {t('products.products', {}, 'Sacred Products')}
                         </h1>
                         <p className="text-semantic-textSub max-w-2xl mx-auto leading-relaxed">
-                            Discover our curated collection of authentic religious products, 
-                            handcrafted with devotion and blessed with sanctity.
+                            {t('products.collection_description', {}, 'Discover our curated collection of authentic religious products, handcrafted with devotion and blessed with sanctity.')}
                         </p>
                     </div>
 
@@ -85,7 +86,7 @@ export default function ProductsIndex({ auth, products, categories = [], filters
                         <div className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1">
                                 <SearchAutocomplete
-                                    placeholder="Search sacred items..."
+                                    placeholder={t('common.search_placeholder', {}, 'Search sacred items...')}
                                     className="w-full"
                                     onSearch={(query) => {
                                         setSearchTerm(query);
@@ -118,11 +119,11 @@ export default function ProductsIndex({ auth, products, categories = [], filters
                             <div className="flex gap-2">
                                 <Button onClick={handleFilter}>
                                     <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
-                                    Search
+                                    {t('common.search', {}, 'Search')}
                                 </Button>
                                 {(searchTerm || selectedCategory || minPrice || maxPrice) && (
                                     <Button variant="tertiary" onClick={clearFilters}>
-                                        Clear
+                                        {t('common.clear', {}, 'Clear')}
                                     </Button>
                                 )}
                             </div>
@@ -134,12 +135,12 @@ export default function ProductsIndex({ auth, products, categories = [], filters
                         <div className="mb-6 flex flex-wrap gap-2">
                             {searchTerm && (
                                 <Badge variant="secondary">
-                                    Search: "{searchTerm}"
+                                    {t('common.search', {}, 'Search')}: "{searchTerm}"
                                 </Badge>
                             )}
                             {selectedCategory && categories.find(c => c.id.toString() === selectedCategory) && (
                                 <Badge variant="secondary">
-                                    Category: {categories.find(c => c.id.toString() === selectedCategory)?.name}
+                                    {t('products.category', {}, 'Category')}: {categories.find(c => c.id.toString() === selectedCategory)?.name}
                                 </Badge>
                             )}
                         </div>
