@@ -9,18 +9,12 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-})->name('welcome');
+Route::get('/', [HomeController::class, 'index'])->name('welcome');
 
 // Admin panel redirect
 Route::get('/admin', function () {
@@ -32,6 +26,18 @@ Route::get('/admin', function () {
 
 // Public product browsing routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+
+// Fallback route for ID-based product URLs (redirects to slug-based URLs)
+Route::get('/products/{id}', function ($id) {
+    if (is_numeric($id)) {
+        $product = \App\Models\Product::find($id);
+        if ($product) {
+            return redirect()->route('products.show', $product->slug, 301);
+        }
+    }
+    abort(404);
+})->where('id', '[0-9]+');
+
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/categories/{category}/products', [ProductController::class, 'byCategory'])->name('products.by-category');
 Route::get('/search/products', [ProductController::class, 'search'])->name('products.search');

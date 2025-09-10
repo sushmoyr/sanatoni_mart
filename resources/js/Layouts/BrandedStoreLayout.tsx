@@ -8,6 +8,7 @@ import { Input } from '@/Components/ui/Input';
 import { Avatar } from '@/Components/ui/Avatar';
 import Dropdown from '@/Components/Dropdown';
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
+import SearchAutocomplete from '@/Components/SearchAutocomplete';
 import { cn } from '@/lib/utils';
 import {
     ShoppingCartIcon,
@@ -38,10 +39,6 @@ export default function BrandedStoreLayout({ children, title = 'Sanatoni Mart', 
     const navigation = [
         { name: 'Home', href: '/' },
         { name: 'Products', href: '/products' },
-        { name: 'Deities', href: '/categories/deities' },
-        { name: 'Pooja Samagri', href: '/categories/pooja-samagri' },
-        { name: 'Scriptures', href: '/categories/scriptures' },
-        { name: 'Beads', href: '/categories/beads' },
     ];
 
     return (
@@ -53,21 +50,6 @@ export default function BrandedStoreLayout({ children, title = 'Sanatoni Mart', 
             </Head>
 
             <div className="min-h-screen bg-semantic-bg sacred-bg">
-                {/* Utility Bar */}
-                <div className="bg-brand-700 text-white py-1">
-                    <div className="container-custom">
-                        <div className="flex items-center justify-between text-xs">
-                            <div className="flex items-center space-x-4">
-                                <span>✨ Authentic religious products • Ethically sourced</span>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                                <span>📞 +880 1234-567890</span>
-                                <span>🚚 Free delivery on orders above ৳1000</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 {/* Main Header */}
                 <header className="bg-white/80 backdrop-blur-support border-b border-semantic-border sticky top-0 z-40">
                     <div className="container-custom">
@@ -75,9 +57,6 @@ export default function BrandedStoreLayout({ children, title = 'Sanatoni Mart', 
                             {/* Logo */}
                             <div className="flex items-center">
                                 <Link href="/" className="flex items-center group">
-                                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center text-white font-bold text-lg mr-3 transition-transform group-hover:scale-105">
-                                        🕉
-                                    </div>
                                     <div>
                                         <div className="text-xl font-serif font-bold text-semantic-text tracking-tight">
                                             Sanatoni Mart
@@ -103,12 +82,8 @@ export default function BrandedStoreLayout({ children, title = 'Sanatoni Mart', 
                             </nav>
 
                             {/* Search Bar */}
-                            <div className="hidden md:flex flex-1 max-w-lg mx-8">
-                                {/* <Search 
-                                    placeholder="Search sacred items..."
-                                    className="w-full"
-                                /> */}
-                                <Input 
+                            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+                                <SearchAutocomplete 
                                     placeholder="Search sacred items..."
                                     className="w-full"
                                 />
@@ -335,9 +310,6 @@ export default function BrandedStoreLayout({ children, title = 'Sanatoni Mart', 
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                             <div className="col-span-1 md:col-span-2">
                                 <div className="flex items-center mb-4">
-                                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center text-white font-bold text-lg mr-3">
-                                        🕉
-                                    </div>
                                     <div>
                                         <div className="text-xl font-serif font-bold">Sanatoni Mart</div>
                                         <div className="text-sm text-gray-400">Sacred & Authentic</div>

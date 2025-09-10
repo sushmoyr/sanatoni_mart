@@ -154,8 +154,9 @@ class ProductController extends Controller
     /**
      * Display the specified product
      */
-    public function show(Product $product): Response
+    public function show($productId): Response
     {
+        $product = Product::findOrFail($productId);
         $product->load(['category', 'images']);
 
         return Inertia::render('Admin/Products/Show', [
@@ -166,22 +167,24 @@ class ProductController extends Controller
     /**
      * Show the form for editing the specified product
      */
-    public function edit(Product $product): Response
+    public function edit($productId): Response
     {
-        $categories = Category::active()->orderBy('name')->get();
-        $product->load(['category', 'images']);
+        $product = Product::with(['category', 'images'])->findOrFail($productId);
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
 
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
-            'categories' => $categories,
+            'categories' => $categories->values()->toArray(),
         ]);
     }
 
     /**
      * Update the specified product
      */
-    public function update(Request $request, Product $product): RedirectResponse
+    public function update(Request $request, $productId): RedirectResponse
     {
+        $product = Product::findOrFail($productId);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -226,8 +229,10 @@ class ProductController extends Controller
     /**
      * Remove the specified product
      */
-    public function destroy(Product $product): RedirectResponse
+    public function destroy($productId): RedirectResponse
     {
+        $product = Product::findOrFail($productId);
+        
         // Delete associated images
         $product->images()->delete();
         

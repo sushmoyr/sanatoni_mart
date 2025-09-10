@@ -46,7 +46,7 @@ export function ProductCard({ product, className, onAddToCart, loading }: Produc
             "group relative rounded-lg bg-semantic-elevate shadow-e1 border border-semantic-border overflow-hidden transition-all duration-200 hover:shadow-e2",
             className
         )}>
-            <Link href={route('products.show', product.id)} className="block">
+            <Link href={route('products.show', product.slug)} className="block">
                 {/* Product Image */}
                 <div className="aspect-square overflow-hidden bg-neutral-100 relative">
                     <img

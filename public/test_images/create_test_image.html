@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Test Image</title>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 800, 400);
+        gradient.addColorStop(0, '#4A90E2');
+        gradient.addColorStop(1, '#7B68EE');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 800, 400);
+        
+        // Add text
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 36px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Sanatoni Mart', 400, 150);
+        
+        ctx.font = '24px Arial';
+        ctx.fillText('Sacred & Authentic Religious Products', 400, 200);
+        
+        ctx.font = '18px Arial';
+        ctx.fillText('Test Slider Image', 400, 250);
+        
+        // Convert to blob and download
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'slider_test.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 'image/jpeg', 0.9);
+    </script>
+</body>
+</html>

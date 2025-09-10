@@ -5,6 +5,7 @@ import { Product, Category, PageProps } from '@/types';
 import { Card } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
 import { Input } from '@/Components/ui/Input';
+import DragDropImageUpload from '@/Components/DragDropImageUpload';
 import { PlusIcon, TrashIcon, PhotoIcon } from '@heroicons/react/24/outline';
 
 interface EditProps extends PageProps {
@@ -15,7 +16,21 @@ interface EditProps extends PageProps {
     categories: Category[];
 }
 
-export default function Edit({ auth, product, categories }: EditProps) {
+export default function Edit({ auth, product, categories = [] }: EditProps) {
+    const [specifications, setSpecifications] = useState<{ key: string; value: string }[]>(
+        Array.isArray(product.specifications) ? product.specifications : []
+    );
+
+    const [images, setImages] = useState<any[]>(
+        product.images?.map(img => ({
+            id: img.id,
+            url: `/storage/${img.image_path}`,
+            name: `image-${img.id}.jpg`,
+            alt_text: img.alt_text,
+            sort_order: img.sort_order
+        })) || []
+    );
+
     const { data, setData, put, processing, errors } = useForm({
         name: product.name || '',
         description: product.description || '',
@@ -30,10 +45,6 @@ export default function Edit({ auth, product, categories }: EditProps) {
         meta_description: product.meta_description || '',
         specifications: JSON.stringify(product.specifications || []),
     });
-
-    const [specifications, setSpecifications] = useState<{ key: string; value: string }[]>(
-        product.specifications || []
-    );
 
     const addSpecification = () => {
         setSpecifications([...specifications, { key: '', value: '' }]);
@@ -50,6 +61,26 @@ export default function Edit({ auth, product, categories }: EditProps) {
         const newSpecs = specifications.filter((_, i) => i !== index);
         setSpecifications(newSpecs);
         setData('specifications', JSON.stringify(newSpecs));
+    };
+
+    const handleImagesChange = (newImages: any[]) => {
+        setImages(newImages);
+    };
+
+    const handleImageUpload = async (files: File[]): Promise<any[]> => {
+        // For now, return as local files - in production you'd upload to server
+        return files.map((file, index) => ({
+            id: Date.now() + index,
+            file,
+            url: URL.createObjectURL(file),
+            name: file.name,
+            preview: URL.createObjectURL(file)
+        }));
+    };
+
+    const handleImageDelete = async (image: any) => {
+        // In production, you'd make an API call to delete the image
+        console.log('Deleting image:', image);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -159,7 +190,7 @@ export default function Edit({ auth, product, categories }: EditProps) {
                                     className="w-full border border-semantic-border rounded-lg px-3 py-2 text-semantic-text bg-white focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent"
                                 >
                                     <option value="">Select a sacred category</option>
-                                    {categories.map((category) => (
+                                    {(Array.isArray(categories) ? categories : []).map((category) => (
                                         <option key={category.id} value={category.id}>
                                             {category.name}
                                         </option>
@@ -238,32 +269,25 @@ export default function Edit({ auth, product, categories }: EditProps) {
 
                     {/* Product Images */}
                     <Card>
-                        <h2 className="text-lg font-semibold text-semantic-text mb-6">Sacred Product Images</h2>
-                        {product.images && product.images.length > 0 ? (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                {product.images.map((image) => (
-                                    <div key={image.id} className="relative group">
-                                        <img
-                                            src={`/storage/${image.image_path}`}
-                                            alt={image.alt_text || product.name}
-                                            className="w-full h-32 object-cover rounded-lg border border-semantic-border"
-                                        />
-                                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg flex items-center justify-center">
-                                            <span className="text-white text-sm">Sacred Image {image.sort_order}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="border-2 border-dashed border-semantic-border rounded-lg p-8 text-center mb-6">
-                                <PhotoIcon className="w-12 h-12 text-semantic-textSub mx-auto mb-4" />
-                                <p className="text-semantic-textSub">No sacred images uploaded yet</p>
-                            </div>
-                        )}
-                        <p className="text-sm text-semantic-textSub">
-                            Image management will be available in a future update. 
-                            Current images can be managed through the file system.
-                        </p>
+                        <div className="mb-6">
+                            <h2 className="text-lg font-semibold text-semantic-text mb-2">Product Images</h2>
+                            <p className="text-sm text-semantic-textSub">
+                                Upload high-quality images to showcase your product. The first image will be used as the primary image.
+                            </p>
+                        </div>
+                        <DragDropImageUpload
+                            images={images}
+                            onImagesChange={handleImagesChange}
+                            onUpload={handleImageUpload}
+                            onDelete={handleImageDelete}
+                            maxImages={10}
+                            multiple={true}
+                            allowReorder={true}
+                            allowPrimary={true}
+                            label=""
+                            helpText="Upload product images (PNG, JPG, WebP up to 5MB each)"
+                            className="w-full"
+                        />
                     </Card>
 
                     {/* Specifications */}
@@ -281,7 +305,7 @@ export default function Edit({ auth, product, categories }: EditProps) {
                         </div>
 
                         <div className="space-y-4">
-                            {specifications.map((spec, index) => (
+                            {Array.isArray(specifications) && specifications.map((spec, index) => (
                                 <div key={index} className="flex gap-4 items-start">
                                     <div className="flex-1">
                                         <Input
@@ -308,7 +332,7 @@ export default function Edit({ auth, product, categories }: EditProps) {
                                 </div>
                             ))}
 
-                            {specifications.length === 0 && (
+                            {(!Array.isArray(specifications) || specifications.length === 0) && (
                                 <div className="text-center py-8 border-2 border-dashed border-semantic-border rounded-lg">
                                     <p className="text-semantic-textSub">No specifications added yet</p>
                                     <p className="text-sm text-semantic-textSub mt-1">

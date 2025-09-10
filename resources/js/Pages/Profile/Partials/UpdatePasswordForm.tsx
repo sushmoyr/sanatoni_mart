@@ -1,10 +1,8 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
-import { FormEventHandler, useRef } from 'react';
+import { FormEventHandler, useRef, useState } from 'react';
+import { Input, Button } from '@/Components/ui';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 export default function UpdatePasswordForm({
     className = '',
@@ -13,6 +11,9 @@ export default function UpdatePasswordForm({
 }) {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const {
         data,
@@ -50,83 +51,101 @@ export default function UpdatePasswordForm({
 
     return (
         <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Update Password
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-600">
-                    Ensure your account is using a long, random password to stay
-                    secure.
-                </p>
-            </header>
-
-            <form onSubmit={updatePassword} className="mt-6 space-y-6">
+            <form onSubmit={updatePassword} className="space-y-6">
                 <div>
-                    <InputLabel
-                        htmlFor="current_password"
-                        value="Current Password"
-                    />
-
-                    <TextInput
+                    <label htmlFor="current_password" className="block text-sm font-medium text-semantic-text mb-2">
+                        Current Password
+                    </label>
+                    <Input
                         id="current_password"
                         ref={currentPasswordInput}
                         value={data.current_password}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setData('current_password', e.target.value)
                         }
-                        type="password"
-                        className="mt-1 block w-full"
+                        type={showCurrentPassword ? "text" : "password"}
                         autoComplete="current-password"
-                    />
-
-                    <InputError
-                        message={errors.current_password}
-                        className="mt-2"
+                        error={errors.current_password}
+                        className="w-full"
+                        rightIcon={
+                            <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                className="text-semantic-textSub hover:text-semantic-text transition-colors"
+                            >
+                                {showCurrentPassword ? (
+                                    <EyeSlashIcon className="h-5 w-5" />
+                                ) : (
+                                    <EyeIcon className="h-5 w-5" />
+                                )}
+                            </button>
+                        }
                     />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password" value="New Password" />
-
-                    <TextInput
+                    <label htmlFor="password" className="block text-sm font-medium text-semantic-text mb-2">
+                        New Password
+                    </label>
+                    <Input
                         id="password"
                         ref={passwordInput}
                         value={data.password}
-                        onChange={(e) => setData('password', e.target.value)}
-                        type="password"
-                        className="mt-1 block w-full"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('password', e.target.value)}
+                        type={showNewPassword ? "text" : "password"}
                         autoComplete="new-password"
+                        error={errors.password}
+                        className="w-full"
+                        rightIcon={
+                            <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="text-semantic-textSub hover:text-semantic-text transition-colors"
+                            >
+                                {showNewPassword ? (
+                                    <EyeSlashIcon className="h-5 w-5" />
+                                ) : (
+                                    <EyeIcon className="h-5 w-5" />
+                                )}
+                            </button>
+                        }
                     />
-
-                    <InputError message={errors.password} className="mt-2" />
                 </div>
 
                 <div>
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
+                    <label htmlFor="password_confirmation" className="block text-sm font-medium text-semantic-text mb-2">
+                        Confirm New Password
+                    </label>
+                    <Input
                         id="password_confirmation"
                         value={data.password_confirmation}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setData('password_confirmation', e.target.value)
                         }
-                        type="password"
-                        className="mt-1 block w-full"
+                        type={showConfirmPassword ? "text" : "password"}
                         autoComplete="new-password"
-                    />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
+                        error={errors.password_confirmation}
+                        className="w-full"
+                        rightIcon={
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="text-semantic-textSub hover:text-semantic-text transition-colors"
+                            >
+                                {showConfirmPassword ? (
+                                    <EyeSlashIcon className="h-5 w-5" />
+                                ) : (
+                                    <EyeIcon className="h-5 w-5" />
+                                )}
+                            </button>
+                        }
                     />
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                    <Button type="submit" disabled={processing}>
+                        {processing ? 'Updating...' : 'Update Password'}
+                    </Button>
 
                     <Transition
                         show={recentlySuccessful}
@@ -135,8 +154,8 @@ export default function UpdatePasswordForm({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">
-                            Saved.
+                        <p className="text-sm text-success-600 font-medium">
+                            Password updated successfully.
                         </p>
                     </Transition>
                 </div>

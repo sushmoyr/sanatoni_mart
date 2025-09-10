@@ -33,6 +33,19 @@ export default {
                     800: '#7D5A2A',
                     900: '#654823',
                 },
+                // Primary - Sacred gold/saffron for divine elements
+                primary: {
+                    50: '#FEF7E6',
+                    100: '#FDEECC',
+                    200: '#FBDD99',
+                    300: '#F9CC66',
+                    400: '#F7BB33',
+                    500: '#F5AA00',  // sacred saffron
+                    600: '#C48800',
+                    700: '#936600',
+                    800: '#624400',
+                    900: '#312200',
+                },
                 // Accent color palette - Royal Purple
                 accent: {
                     50: '#F3F0FF',
@@ -45,6 +58,36 @@ export default {
                     700: '#6D28D9',
                     800: '#5B21B6',
                     900: '#4C1D95',
+                },
+                // Spiritual color palette
+                spiritual: {
+                    light: '#FEF9E7',  // warm ivory
+                    mist: '#F5F0E8',   // soft beige
+                    glow: '#EDE4D1',   // gentle gold
+                    deep: '#C49B61',   // spiritual gold
+                },
+                sacred: {
+                    50: '#FEF7E6',
+                    100: '#FDEECC',
+                    200: '#F5E4C8',
+                    300: '#E8D5B7',
+                    400: '#DCC5A4',
+                    500: '#C49B61',   // sacred gold
+                    600: '#B8883A',
+                    700: '#9A7033',
+                    800: '#7D5A2A',
+                    900: '#654823',
+                },
+                devotional: {
+                    dawn: '#FFF9E6',   // early morning light
+                    light: '#FFF3D4',  // gentle sunrise
+                    warm: '#FFE5B4',   // warm glow
+                    deep: '#E6CC94',   // deeper devotion
+                },
+                // Error colors
+                error: {
+                    50: '#FEF2F2',
+                    600: '#DC2626',
                 },
                 // Neutral palette
                 neutral: {
@@ -74,6 +117,7 @@ export default {
                 },
                 warning: {
                     50: '#FFFBEB',
+                    200: '#FEF3C7',
                     500: '#F59E0B',
                     600: '#D97706',
                     700: '#B45309',
@@ -115,6 +159,13 @@ export default {
                 'e1': '0 1px 1px rgba(0,0,0,0.04)',
                 'e2': '0 4px 12px rgba(0,0,0,0.08)',
                 'e3': '0 12px 32px rgba(0,0,0,0.18)',
+                'divine': '0 8px 25px rgba(196, 155, 97, 0.15), 0 3px 10px rgba(196, 155, 97, 0.1)',
+                'enlightened': '0 20px 40px rgba(196, 155, 97, 0.2), 0 8px 16px rgba(196, 155, 97, 0.15)',
+            },
+            backgroundImage: {
+                'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+                'spiritual-gradient': 'linear-gradient(135deg, #FEF7E6 0%, #F5F0E8 50%, #FFF9E6 100%)',
             },
             animation: {
                 'fade-in': 'fadeIn 200ms cubic-bezier(0.2, 0.7, 0.2, 1)',
@@ -156,6 +207,21 @@ export default {
                 },
                 '.text-balance': {
                     'text-wrap': 'balance',
+                },
+                '.devotional-glow': {
+                    'box-shadow': '0 0 20px rgba(196, 155, 97, 0.15), 0 0 40px rgba(196, 155, 97, 0.08)',
+                },
+                '.devotional-border': {
+                    'border': '1px solid rgba(196, 155, 97, 0.2)',
+                    'background': 'linear-gradient(145deg, rgba(255, 247, 230, 0.8), rgba(245, 240, 232, 0.9))',
+                },
+                '.sacred-shimmer': {
+                    'background': 'linear-gradient(90deg, transparent, rgba(196, 155, 97, 0.4), transparent)',
+                    'animation': 'shimmer 2s infinite',
+                },
+                '@keyframes shimmer': {
+                    '0%': { transform: 'translateX(-100%)' },
+                    '100%': { transform: 'translateX(100%)' },
                 },
             })
         }

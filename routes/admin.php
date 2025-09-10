@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ShippingZoneController;
 use App\Http\Controllers\Admin\FlashSaleController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\NewsletterController;
+use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,11 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
     Route::post('products/upload-image', [ProductController::class, 'uploadImage'])->name('products.upload-image');
     Route::delete('products/delete-image', [ProductController::class, 'deleteImage'])->name('products.delete-image');
     Route::put('products/update-image', [ProductController::class, 'updateImage'])->name('products.update-image');
+    
+    // Slider Management - Admin and Manager
+    Route::resource('sliders', SliderController::class);
+    Route::post('sliders/bulk-action', [SliderController::class, 'bulkAction'])->name('sliders.bulk-action');
+    Route::post('sliders/reorder', [SliderController::class, 'reorder'])->name('sliders.reorder');
     
     // Reports
     Route::get('reports/dashboard', [ReportController::class, 'dashboard'])->name('reports.dashboard');

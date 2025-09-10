@@ -1,4 +1,3 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
@@ -18,14 +17,19 @@ export default function Authenticated({
         useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
+        <div className="min-h-screen bg-semantic-bg sacred-bg">
+            <nav className="border-b border-semantic-border bg-semantic-surface/95 backdrop-blur-sm">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
+                                <Link href="/" className="group">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-primary-600 text-xl">🕉</span>
+                                        <span className="text-lg font-serif font-bold text-semantic-text group-hover:text-primary-600 transition-colors">
+                                            Sanatoni Mart
+                                        </span>
+                                    </div>
                                 </Link>
                             </div>
 
@@ -49,7 +53,7 @@ export default function Authenticated({
                             <LanguageSwitcher 
                                 currentLocale={locale}
                                 availableLanguages={available_languages}
-                                className=""
+                                className="bg-semantic-surface/80 backdrop-blur-sm border border-semantic-border rounded-lg shadow-e2"
                             />
                             <div className="relative ms-3">
                                 <Dropdown>
@@ -57,7 +61,7 @@ export default function Authenticated({
                                         <span className="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
+                                                className="inline-flex items-center rounded-md border border-transparent bg-semantic-surface px-3 py-2 text-sm font-medium leading-4 text-semantic-textSub transition duration-150 ease-in-out hover:text-semantic-text focus:outline-none"
                                             >
                                                 {user?.name}
 
@@ -102,7 +106,7 @@ export default function Authenticated({
                                         (previousState) => !previousState,
                                     )
                                 }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
+                                className="inline-flex items-center justify-center rounded-md p-2 text-semantic-textSub transition duration-150 ease-in-out hover:bg-semantic-surface hover:text-semantic-text focus:bg-semantic-surface focus:text-semantic-text focus:outline-none"
                             >
                                 <svg
                                     className="h-6 w-6"
@@ -159,19 +163,19 @@ export default function Authenticated({
                         </ResponsiveNavLink>
                     </div>
 
-                    <div className="border-t border-gray-200 pb-1 pt-4">
+                    <div className="border-t border-semantic-border pb-1 pt-4">
                         <div className="px-4 mb-4">
                             <LanguageSwitcher 
                                 currentLocale={locale}
                                 availableLanguages={available_languages}
-                                className="w-full"
+                                className="w-full bg-semantic-surface/80 backdrop-blur-sm border border-semantic-border rounded-lg shadow-e2"
                             />
                         </div>
                         <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">
+                            <div className="text-base font-medium text-semantic-text">
                                 {user?.name}
                             </div>
-                            <div className="text-sm font-medium text-gray-500">
+                            <div className="text-sm font-medium text-semantic-textSub">
                                 {user?.email}
                             </div>
                         </div>
@@ -193,14 +197,37 @@ export default function Authenticated({
             </nav>
 
             {header && (
-                <header className="bg-white shadow">
+                <header className="bg-semantic-surface shadow-e1">
                     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {header}
                     </div>
                 </header>
             )}
 
-            <main>{children}</main>
+            <main className="relative overflow-hidden">
+                {/* Sacred symbols floating in the background */}
+                <div className="fixed inset-0 pointer-events-none opacity-5 z-0">
+                    <div className="absolute top-1/4 left-1/4 text-6xl text-primary-300 animate-bounce-slow">
+                        🕉
+                    </div>
+                    <div className="absolute top-3/4 right-1/4 text-4xl text-accent-300 animate-pulse">
+                        ☪
+                    </div>
+                    <div className="absolute top-1/2 left-3/4 text-5xl text-secondary-300 animate-spin-slow">
+                        ✡
+                    </div>
+                    <div className="absolute bottom-1/4 left-1/2 text-3xl text-primary-400 animate-float">
+                        ☸
+                    </div>
+                    <div className="absolute top-1/3 right-1/3 text-4xl text-accent-400 animate-bounce-slow">
+                        ✝
+                    </div>
+                </div>
+                
+                <div className="relative z-10">
+                    {children}
+                </div>
+            </main>
         </div>
     );
 }

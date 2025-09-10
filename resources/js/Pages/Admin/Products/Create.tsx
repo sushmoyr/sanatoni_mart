@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Category } from '@/types';
 import { Card, Button, Input, Badge } from '@/Components/ui';
+import DragDropImageUpload from '@/Components/DragDropImageUpload';
 import { 
     ArrowLeftIcon,
     CubeIcon,
@@ -38,6 +39,21 @@ export default function Create({ categories }: Props) {
         meta_title: '',
         meta_description: '',
     });
+
+    const handleImagesChange = (newImages: any[]) => {
+        setImages(newImages);
+    };
+
+    const handleImageUpload = async (files: File[]): Promise<any[]> => {
+        // For now, return as local files - in production you'd upload to server during product creation
+        return files.map((file, index) => ({
+            id: Date.now() + index,
+            file,
+            url: URL.createObjectURL(file),
+            name: file.name,
+            preview: URL.createObjectURL(file)
+        }));
+    };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -446,21 +462,27 @@ export default function Create({ categories }: Props) {
                         {/* Product Images */}
                         <Card className="devotional-border">
                             <div className="p-6">
-                                <h3 className="text-lg font-serif font-medium text-semantic-text mb-6 flex items-center">
-                                    <PhotoIcon className="h-5 w-5 mr-2 text-brand-600" />
-                                    Product Images
-                                </h3>
-                                
-                                <div className="border-2 border-dashed border-semantic-border rounded-lg p-6 text-center">
-                                    <PhotoIcon className="h-12 w-12 text-semantic-textSub mx-auto mb-4" />
-                                    <p className="text-semantic-text font-medium mb-2">Upload Sacred Product Images</p>
+                                <div className="mb-6">
+                                    <h3 className="text-lg font-serif font-medium text-semantic-text mb-2 flex items-center">
+                                        <PhotoIcon className="h-5 w-5 mr-2 text-brand-600" />
+                                        Product Images
+                                    </h3>
                                     <p className="text-semantic-textSub text-sm">
-                                        Drag and drop images here, or click to select files
-                                    </p>
-                                    <p className="text-semantic-textSub text-xs mt-2">
-                                        Upload up to 10 images. The first image will be used as the primary image.
+                                        Upload high-quality images to showcase your product. The first image will be used as the primary image.
                                     </p>
                                 </div>
+                                <DragDropImageUpload
+                                    images={images}
+                                    onImagesChange={handleImagesChange}
+                                    onUpload={handleImageUpload}
+                                    maxImages={10}
+                                    multiple={true}
+                                    allowReorder={true}
+                                    allowPrimary={true}
+                                    label=""
+                                    helpText="Upload product images (PNG, JPG, WebP up to 5MB each)"
+                                    className="w-full"
+                                />
                             </div>
                         </Card>
 

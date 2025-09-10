@@ -1,17 +1,37 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { PageProps } from '@/types';
 import { Card, Badge } from '@/Components/ui';
 import { 
-    UsersIcon, 
-    ShieldCheckIcon, 
-    StarIcon, 
+    CurrencyDollarIcon,
+    ShoppingBagIcon,
+    CubeIcon,
+    FolderIcon,
+    ChartBarIcon,
+    ArrowTrendingUpIcon,
+    ArrowTrendingDownIcon,
+    ExclamationTriangleIcon,
+    EyeIcon,
+    UsersIcon,
+    ClockIcon,
+    ShieldCheckIcon,
+    StarIcon,
     BuildingOfficeIcon,
-    BriefcaseIcon,
-    ClockIcon 
+    BriefcaseIcon
 } from '@heroicons/react/24/outline';
 
-interface DashboardStats {
+interface BusinessStats {
+    total_revenue: number;
+    monthly_revenue: number;
+    total_orders: number;
+    pending_orders: number;
+    total_products: number;
+    active_products: number;
+    total_categories: number;
+    low_stock_products: number;
+}
+
+interface UserStats {
     total_users: number;
     active_users: number;
     admin_users: number;
@@ -19,187 +39,426 @@ interface DashboardStats {
     salesperson_users: number;
 }
 
-interface RecentUser {
-    id: number;
+interface MonthlySale {
+    month: string;
+    revenue: number;
+    orders: number;
+}
+
+interface WeeklySale {
+    date: string;
+    day: string;
+    revenue: number;
+    orders: number;
+}
+
+interface TopCategory {
     name: string;
-    email: string;
+    products_count: number;
+}
+
+interface RecentOrder {
+    id: number;
+    order_number: string;
+    total: number;
     status: string;
-    roles: string[];
+    customer_name: string;
     created_at: string;
-    last_login_at?: string;
+}
+
+interface OrderStatusData {
+    pending: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
+    cancelled: number;
 }
 
 export default function Dashboard({ 
-    stats, 
-    recent_users, 
+    businessStats,
+    userStats,
+    monthlySales,
+    weeklySales,
+    topCategories,
+    recentOrders,
+    orderStatusData,
     user_permissions 
 }: PageProps<{ 
-    stats: DashboardStats; 
-    recent_users: RecentUser[];
+    businessStats: BusinessStats;
+    userStats: UserStats;
+    monthlySales: MonthlySale[];
+    weeklySales: WeeklySale[];
+    topCategories: TopCategory[];
+    recentOrders: RecentOrder[];
+    orderStatusData: OrderStatusData;
     user_permissions: string[];
 }>) {
-    const statCards = [
+    const formatCurrency = (amount: number) => {
+        return `৳${amount.toLocaleString('en-IN')}`;
+    };
+
+    const formatNumber = (num: number) => {
+        return num.toLocaleString('en-IN');
+    };
+
+    const getStatusBadgeVariant = (status: string) => {
+        switch (status) {
+            case 'pending': return 'warning';
+            case 'processing': return 'info';
+            case 'shipped': return 'secondary';
+            case 'delivered': return 'success';
+            case 'cancelled': return 'danger';
+            default: return 'default';
+        }
+    };
+
+    const businessStatCards = [
+        {
+            title: 'Total Revenue',
+            value: formatCurrency(businessStats.total_revenue),
+            icon: CurrencyDollarIcon,
+            bgColor: 'bg-green-100',
+            iconColor: 'text-green-600',
+            change: '+12.5%',
+            changeType: 'positive'
+        },
+        {
+            title: 'Monthly Revenue',
+            value: formatCurrency(businessStats.monthly_revenue),
+            icon: ArrowTrendingUpIcon,
+            bgColor: 'bg-blue-100',
+            iconColor: 'text-blue-600',
+            change: '+8.2%',
+            changeType: 'positive'
+        },
+        {
+            title: 'Total Orders',
+            value: formatNumber(businessStats.total_orders),
+            icon: ShoppingBagIcon,
+            bgColor: 'bg-purple-100',
+            iconColor: 'text-purple-600',
+            change: '+5.7%',
+            changeType: 'positive'
+        },
+        {
+            title: 'Pending Orders',
+            value: formatNumber(businessStats.pending_orders),
+            icon: ClockIcon,
+            bgColor: 'bg-yellow-100',
+            iconColor: 'text-yellow-600',
+            change: '-2.1%',
+            changeType: 'negative'
+        },
+        {
+            title: 'Total Products',
+            value: formatNumber(businessStats.total_products),
+            icon: CubeIcon,
+            bgColor: 'bg-indigo-100',
+            iconColor: 'text-indigo-600',
+            change: '+3.8%',
+            changeType: 'positive'
+        },
+        {
+            title: 'Low Stock Alerts',
+            value: formatNumber(businessStats.low_stock_products),
+            icon: ExclamationTriangleIcon,
+            bgColor: 'bg-red-100',
+            iconColor: 'text-red-600',
+            change: '+15%',
+            changeType: 'negative'
+        }
+    ];
+
+    const userStatCards = [
         {
             title: 'Total Users',
-            value: stats.total_users,
+            value: userStats.total_users,
             icon: UsersIcon,
-            color: 'brand',
             bgColor: 'bg-brand-100',
             iconColor: 'text-brand-600'
         },
         {
             title: 'Active Users',
-            value: stats.active_users,
+            value: userStats.active_users,
             icon: ShieldCheckIcon,
-            color: 'success',
             bgColor: 'bg-success-100',
             iconColor: 'text-success-600'
         },
         {
             title: 'Admins',
-            value: stats.admin_users,
+            value: userStats.admin_users,
             icon: StarIcon,
-            color: 'accent',
             bgColor: 'bg-accent-100',
             iconColor: 'text-accent-600'
         },
         {
             title: 'Managers',
-            value: stats.manager_users,
+            value: userStats.manager_users,
             icon: BuildingOfficeIcon,
-            color: 'warning',
             bgColor: 'bg-warning-100',
             iconColor: 'text-warning-600'
-        },
-        {
-            title: 'Salespersons',
-            value: stats.salesperson_users,
-            icon: BriefcaseIcon,
-            color: 'neutral',
-            bgColor: 'bg-neutral-100',
-            iconColor: 'text-neutral-600'
         }
     ];
+
+    const maxRevenue = Math.max(...monthlySales.map(s => s.revenue));
+    const maxWeeklyRevenue = Math.max(...weeklySales.map(s => s.revenue));
 
     return (
         <AdminLayout>
             <Head title="Admin Dashboard" />
             
-            <div className="container-custom py-8">
+            <div className="space-y-8">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-serif font-bold text-semantic-text mb-2">
-                        Admin Dashboard
-                    </h1>
-                    <p className="text-semantic-textSub">
-                        Overview of your sacred marketplace management
-                    </p>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h1 className="text-3xl font-serif font-bold text-semantic-text mb-2">
+                            Admin Dashboard
+                        </h1>
+                        <p className="text-semantic-textSub">
+                            Comprehensive overview of your e-commerce operations
+                        </p>
+                    </div>
+                    <div className="flex space-x-3">
+                        <Link href={route('admin.reports.dashboard')}>
+                            <Card className="px-4 py-2 hover:shadow-md transition-shadow cursor-pointer">
+                                <div className="flex items-center space-x-2">
+                                    <ChartBarIcon className="h-5 w-5 text-brand-600" />
+                                    <span className="text-sm font-medium text-semantic-text">View Reports</span>
+                                </div>
+                            </Card>
+                        </Link>
+                    </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5 mb-8">
-                    {statCards.map((stat) => (
-                        <Card key={stat.title} className="p-6 devotional-border hover:shadow-e2 transition-all duration-300">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-                                        <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
+                {/* Business Stats Grid */}
+                <div>
+                    <h2 className="text-xl font-semibold text-semantic-text mb-4">Business Overview</h2>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                        {businessStatCards.map((stat) => (
+                            <Card key={stat.title} className="p-6 hover:shadow-lg transition-all duration-300">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center mb-2">
+                                            <div className={`w-10 h-10 ${stat.bgColor} rounded-lg flex items-center justify-center mr-3`}>
+                                                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+                                            </div>
+                                        </div>
+                                        <p className="text-xs font-medium text-semantic-textSub mb-1">
+                                            {stat.title}
+                                        </p>
+                                        <p className="text-lg font-bold text-semantic-text">
+                                            {stat.value}
+                                        </p>
+                                        {stat.change && (
+                                            <div className={`flex items-center mt-1 text-xs ${
+                                                stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+                                            }`}>
+                                                {stat.changeType === 'positive' ? (
+                                                    <ArrowTrendingUpIcon className="h-3 w-3 mr-1" />
+                                                ) : (
+                                                    <ArrowTrendingDownIcon className="h-3 w-3 mr-1" />
+                                                )}
+                                                {stat.change}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-semantic-textSub">
-                                        {stat.title}
-                                    </p>
-                                    <p className="text-2xl font-bold text-semantic-text font-tnum">
-                                        {stat.value}
-                                    </p>
-                                </div>
-                            </div>
-                        </Card>
-                    ))}
+                            </Card>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Recent Users */}
-                <Card className="devotional-border">
-                    <div className="p-6 border-b border-semantic-border">
-                        <div className="flex items-center">
-                            <UsersIcon className="h-5 w-5 text-brand-600 mr-2" />
-                            <h3 className="text-lg font-serif font-semibold text-semantic-text">
-                                Recent Users
-                            </h3>
+                {/* Charts and Analytics Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Monthly Sales Chart */}
+                    <Card className="lg:col-span-2">
+                        <div className="p-6 border-b border-semantic-border">
+                            <h3 className="text-lg font-semibold text-semantic-text">Monthly Sales Trend</h3>
+                            <p className="text-sm text-semantic-textSub">Revenue and orders over the last 6 months</p>
                         </div>
-                    </div>
-                    <div className="overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-semantic-border">
-                                <thead className="bg-semantic-surface">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-semantic-textSub uppercase tracking-wider">
-                                            User
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-semantic-textSub uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-semantic-textSub uppercase tracking-wider">
-                                            Roles
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-semantic-textSub uppercase tracking-wider">
-                                            Last Login
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-semantic-border">
-                                    {recent_users.map((user) => (
-                                        <tr key={user.id} className="hover:bg-semantic-surface transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div>
-                                                    <div className="text-sm font-medium text-semantic-text">
-                                                        {user.name}
-                                                    </div>
-                                                    <div className="text-sm text-semantic-textSub">
-                                                        {user.email}
-                                                    </div>
+                        <div className="p-6">
+                            <div className="space-y-4">
+                                {monthlySales.map((data, index) => (
+                                    <div key={index} className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="text-sm font-medium text-semantic-text w-16">
+                                                {data.month}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="bg-semantic-surface rounded-full h-2 relative overflow-hidden">
+                                                    <div 
+                                                        className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                                                        style={{ width: `${(data.revenue / maxRevenue) * 100}%` }}
+                                                    />
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <Badge 
-                                                    variant={
-                                                        user.status === 'active' 
-                                                            ? 'success' 
-                                                            : user.status === 'inactive'
-                                                            ? 'warning'
-                                                            : 'danger'
-                                                    }
-                                                    size="sm"
-                                                >
-                                                    {user.status}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {user.roles.map((role, index) => (
-                                                        <Badge key={index} variant="secondary" size="sm">
-                                                            {role}
-                                                        </Badge>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-semantic-textSub">
-                                                <div className="flex items-center">
-                                                    <ClockIcon className="h-4 w-4 mr-1" />
-                                                    {user.last_login_at 
-                                                        ? new Date(user.last_login_at).toLocaleDateString()
-                                                        : 'Never'
-                                                    }
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-semibold text-semantic-text">
+                                                {formatCurrency(data.revenue)}
+                                            </div>
+                                            <div className="text-xs text-semantic-textSub">
+                                                {data.orders} orders
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                </Card>
+                    </Card>
+
+                    {/* Order Status Distribution */}
+                    <Card>
+                        <div className="p-6 border-b border-semantic-border">
+                            <h3 className="text-lg font-semibold text-semantic-text">Order Status</h3>
+                            <p className="text-sm text-semantic-textSub">Current order distribution</p>
+                        </div>
+                        <div className="p-6">
+                            <div className="space-y-4">
+                                {Object.entries(orderStatusData).map(([status, count]) => (
+                                    <div key={status} className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <Badge variant={getStatusBadgeVariant(status)} size="sm">
+                                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                                            </Badge>
+                                        </div>
+                                        <div className="text-sm font-semibold text-semantic-text">
+                                            {count}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Weekly Trend and Recent Orders */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Weekly Sales Trend */}
+                    <Card>
+                        <div className="p-6 border-b border-semantic-border">
+                            <h3 className="text-lg font-semibold text-semantic-text">Weekly Sales</h3>
+                            <p className="text-sm text-semantic-textSub">Last 7 days performance</p>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-7 gap-2">
+                                {weeklySales.map((data, index) => (
+                                    <div key={index} className="text-center">
+                                        <div className="text-xs text-semantic-textSub mb-2">{data.day}</div>
+                                        <div className="bg-semantic-surface rounded h-20 flex items-end justify-center p-1 relative overflow-hidden">
+                                            <div 
+                                                className="bg-gradient-to-t from-blue-500 to-blue-300 rounded-sm w-full transition-all duration-500"
+                                                style={{ height: `${Math.max((data.revenue / maxWeeklyRevenue) * 100, 5)}%` }}
+                                            />
+                                        </div>
+                                        <div className="text-xs text-semantic-textSub mt-1">{data.orders}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Recent Orders */}
+                    <Card>
+                        <div className="p-6 border-b border-semantic-border">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-semantic-text">Recent Orders</h3>
+                                    <p className="text-sm text-semantic-textSub">Latest customer orders</p>
+                                </div>
+                                <Link href={route('admin.orders.index')}>
+                                    <EyeIcon className="h-5 w-5 text-brand-600 hover:text-brand-700 cursor-pointer" />
+                                </Link>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <div className="space-y-4">
+                                {recentOrders.map((order) => (
+                                    <div key={order.id} className="flex items-center justify-between p-3 bg-semantic-surface rounded-lg">
+                                        <div>
+                                            <div className="text-sm font-medium text-semantic-text">
+                                                #{order.order_number}
+                                            </div>
+                                            <div className="text-xs text-semantic-textSub">
+                                                {order.customer_name}
+                                            </div>
+                                            <div className="text-xs text-semantic-textSub">
+                                                {order.created_at}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-semibold text-semantic-text">
+                                                {formatCurrency(order.total)}
+                                            </div>
+                                            <Badge variant={getStatusBadgeVariant(order.status)} size="sm">
+                                                {order.status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* User Management Summary and Top Categories */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* User Statistics */}
+                    <Card className="lg:col-span-2">
+                        <div className="p-6 border-b border-semantic-border">
+                            <h3 className="text-lg font-semibold text-semantic-text">User Management</h3>
+                            <p className="text-sm text-semantic-textSub">User roles and activity overview</p>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {userStatCards.map((stat) => (
+                                    <div key={stat.title} className="text-center">
+                                        <div className="flex items-center justify-center mb-2">
+                                            <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
+                                                <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
+                                            </div>
+                                        </div>
+                                        <div className="text-2xl font-bold text-semantic-text">
+                                            {stat.value}
+                                        </div>
+                                        <div className="text-xs text-semantic-textSub">
+                                            {stat.title}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Top Categories */}
+                    <Card>
+                        <div className="p-6 border-b border-semantic-border">
+                            <h3 className="text-lg font-semibold text-semantic-text">Top Categories</h3>
+                            <p className="text-sm text-semantic-textSub">By product count</p>
+                        </div>
+                        <div className="p-6">
+                            <div className="space-y-3">
+                                {topCategories.map((category, index) => (
+                                    <div key={category.name} className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-6 h-6 bg-brand-100 rounded-full flex items-center justify-center">
+                                                <span className="text-xs font-semibold text-brand-600">
+                                                    {index + 1}
+                                                </span>
+                                            </div>
+                                            <span className="text-sm font-medium text-semantic-text">
+                                                {category.name}
+                                            </span>
+                                        </div>
+                                        <span className="text-sm text-semantic-textSub">
+                                            {category.products_count} products
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
             </div>
         </AdminLayout>
     );

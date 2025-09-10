@@ -1,7 +1,7 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
-import SecondaryButton from '@/Components/SecondaryButton';
+import { Button } from '@/Components/ui';
 
 interface OrderItem {
     id: number;
@@ -93,8 +93,8 @@ export default function Track({ order }: Props) {
             <div className="space-y-6">
                 {/* Header */}
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900">Order #{order.order_number}</h2>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <h2 className="text-2xl font-bold text-semantic-text">Order #{order.order_number}</h2>
+                    <p className="mt-1 text-sm text-semantic-textSub">
                         Placed on {new Date(order.created_at).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
@@ -108,7 +108,7 @@ export default function Track({ order }: Props) {
 
                 {/* Progress Bar */}
                 {order.status !== 'cancelled' && (
-                    <div className="bg-gray-50 rounded-lg p-6">
+                    <div className="bg-semantic-surface rounded-lg p-6 devotional-glow">
                         <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
                             <span>Order Progress</span>
                             <span>{getProgressPercentage()}%</span>
@@ -243,10 +243,10 @@ export default function Track({ order }: Props) {
                 {/* Actions */}
                 <div className="flex space-x-3">
                     <Link href={route('orders.track-form')}>
-                        <SecondaryButton>Track Another Order</SecondaryButton>
+                        <Button variant="secondary">Track Another Order</Button>
                     </Link>
                     <Link href={route('products.index')}>
-                        <SecondaryButton>Continue Shopping</SecondaryButton>
+                        <Button variant="secondary">Continue Shopping</Button>
                     </Link>
                 </div>
             </div>

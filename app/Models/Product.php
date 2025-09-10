@@ -17,13 +17,15 @@ class Product extends Model
         'manage_stock', 'stock_quantity', 'allow_backorders', 'stock_status', 'featured',
         'is_active', 'status', 'weight', 'dimensions', 'category_id', 'main_image',
         'gallery_images', 'specifications', 'meta_title', 'meta_description',
+        'is_featured', 'featured_order', 'views_count', 'featured_at',
     ];
 
     protected $casts = [
         'price' => 'decimal:2', 'sale_price' => 'decimal:2', 'weight' => 'decimal:3',
         'manage_stock' => 'boolean', 'allow_backorders' => 'boolean', 'featured' => 'boolean',
         'is_active' => 'boolean', 'stock_quantity' => 'integer', 'gallery_images' => 'array',
-        'specifications' => 'array', 'dimensions' => 'array',
+        'specifications' => 'array', 'dimensions' => 'array', 'is_featured' => 'boolean',
+        'featured_order' => 'integer', 'views_count' => 'integer', 'featured_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -47,6 +49,11 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
     }
 
     public function mainImage()
