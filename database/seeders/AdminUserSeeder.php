@@ -12,7 +12,7 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\User::updateOrCreate(
+        $user = \App\Models\User::updateOrCreate(
             ['email' => 'admin@sanatonimart.com'],
             [
                 'name' => 'Admin User',
@@ -22,6 +22,12 @@ class AdminUserSeeder extends Seeder
                 'status' => 'active',
             ]
         );
+
+        // Assign admin role
+        $adminRole = \App\Models\Role::where('name', 'admin')->first();
+        if ($adminRole) {
+            $user->assignRole($adminRole);
+        }
 
         echo "Admin user created: admin@sanatonimart.com / password123\n";
     }
