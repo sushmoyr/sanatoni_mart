@@ -39,6 +39,7 @@ export default function BrandedStoreLayout({ children, title = 'Sanatoni Mart', 
     const navigation = [
         { name: 'Home', href: '/' },
         { name: 'Products', href: '/products' },
+        { name: 'Flash Sales', href: '/flash-sales' },
     ];
 
     return (

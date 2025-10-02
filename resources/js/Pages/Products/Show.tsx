@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import BrandedStoreLayout from '@/Layouts/BrandedStoreLayout';
 import { PageProps, Product, Category, ProductImage } from '@/types';
 import { Card } from '@/Components/ui/Card';
 import { Badge } from '@/Components/ui/Badge';
 import { Button } from '@/Components/ui/Button';
 import { Input } from '@/Components/ui/Input';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/Components/ui/Modal';
 import { 
     ShoppingCartIcon, 
     HeartIcon,
@@ -18,18 +19,94 @@ import {
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 
+interface Review {
+    id: number;
+    user_id: number;
+    rating: number;
+    title: string;
+    comment: string;
+    created_at: string;
+    user: {
+        name: string;
+    };
+    verified_purchase_data?: any;
+}
+
+interface ReviewStats {
+    averageRating: number;
+    totalReviews: number;
+    breakdown: Record<number, number>;
+}
+
 interface ProductShowProps extends PageProps {
     product: Product & {
         category: Category;
         images: ProductImage[];
     };
+    reviewStats: ReviewStats;
+    recentReviews: Review[];
+    userHasReviewed: boolean;
 }
 
-export default function Show({ product }: ProductShowProps) {
+export default function Show({ product, reviewStats, recentReviews, userHasReviewed }: ProductShowProps) {
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [reviewRating, setReviewRating] = useState(0);
+    const [hoveredRating, setHoveredRating] = useState(0);
+    
+    const reviewForm = useForm({
+        rating: 0,
+        title: '',
+        comment: ''
+    });
+
+    const handleReviewSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        reviewForm.post(route('products.reviews.store', product.id), {
+            onSuccess: () => {
+                setIsReviewModalOpen(false);
+                setReviewRating(0);
+                setHoveredRating(0);
+                reviewForm.reset();
+                // Refresh the page to show the new review
+                router.reload();
+            }
+        });
+    };
+
+    const renderStarRating = (rating: number, interactive: boolean = false) => {
+        return (
+            <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                        key={star}
+                        type="button"
+                        className={`h-5 w-5 ${interactive ? 'cursor-pointer' : 'cursor-default'} ${
+                            star <= rating ? 'text-amber-400' : 'text-gray-300'
+                        }`}
+                        onClick={interactive ? () => {
+                            setReviewRating(star);
+                            reviewForm.setData('rating', star);
+                        } : undefined}
+                        onMouseEnter={interactive ? () => setHoveredRating(star) : undefined}
+                        onMouseLeave={interactive ? () => setHoveredRating(0) : undefined}
+                        disabled={!interactive}
+                    >
+                        <StarIcon 
+                            className={`h-5 w-5 ${
+                                star <= (interactive ? (hoveredRating || reviewRating) : rating) 
+                                    ? 'fill-current' 
+                                    : 'fill-none'
+                            }`}
+                        />
+                    </button>
+                ))}
+            </div>
+        );
+    };
 
     const handleAddToCart = () => {
         router.post('/cart', {
@@ -172,12 +249,19 @@ export default function Show({ product }: ProductShowProps) {
                                             <StarIcon
                                                 key={i}
                                                 className={`h-5 w-5 ${
-                                                    i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                                    i < Math.round(reviewStats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
                                                 }`}
                                             />
                                         ))}
                                     </div>
-                                    <span className="text-sm text-semantic-textSub">(24 reviews)</span>
+                                    <span className="text-sm text-semantic-textSub">
+                                        ({reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''})
+                                    </span>
+                                    {reviewStats.averageRating > 0 && (
+                                        <span className="text-sm text-semantic-textSub ml-1">
+                                            {reviewStats.averageRating.toFixed(1)}
+                                        </span>
+                                    )}
                                 </div>
                                 <p className="text-3xl font-bold text-brand-600 font-tnum">
                                     ৳{product.price}
@@ -280,27 +364,153 @@ export default function Show({ product }: ProductShowProps) {
                         </div>
                     </div>
 
-                    {/* Product details tabs */}
+                    {/* Reviews Section */}
                     <div className="mt-16">
                         <Card>
-                            <div className="border-b border-neutral-200">
-                                <nav className="-mb-px flex space-x-8 px-6">
-                                    <button className="border-brand-500 text-brand-600 border-b-2 py-4 px-1 text-sm font-medium">
-                                        Description
-                                    </button>
-                                    <button className="border-transparent text-semantic-textSub hover:text-semantic-text hover:border-neutral-300 border-b-2 py-4 px-1 text-sm font-medium transition-colors">
-                                        Specifications
-                                    </button>
-                                    <button className="border-transparent text-semantic-textSub hover:text-semantic-text hover:border-neutral-300 border-b-2 py-4 px-1 text-sm font-medium transition-colors">
-                                        Reviews
-                                    </button>
-                                </nav>
-                            </div>
-
                             <div className="p-6">
-                                <div className="prose prose-sm max-w-none text-semantic-text">
-                                    <p>{product.description}</p>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-2xl font-bold text-semantic-text">Customer Reviews</h3>
+                                    {!userHasReviewed && (
+                                        <Button 
+                                            variant="secondary"
+                                            onClick={() => {
+                                                setIsReviewModalOpen(true);
+                                            }}
+                                        >
+                                            Write a Review
+                                        </Button>
+                                    )}
                                 </div>
+
+                                {/* Review Summary */}
+                                {reviewStats.totalReviews > 0 ? (
+                                    <>
+                                        <div className="grid md:grid-cols-2 gap-8 mb-8">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="text-center">
+                                                    <div className="text-4xl font-bold text-semantic-text">
+                                                        {reviewStats.averageRating.toFixed(1)}
+                                                    </div>
+                                                    <div className="flex justify-center mt-1">
+                                                        {[...Array(5)].map((_, i) => (
+                                                            <StarIcon
+                                                                key={i}
+                                                                className={`h-5 w-5 ${
+                                                                    i < Math.round(reviewStats.averageRating) 
+                                                                        ? 'text-yellow-400 fill-current' 
+                                                                        : 'text-gray-300'
+                                                                }`}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <div className="text-sm text-semantic-textSub mt-1">
+                                                        Based on {reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Rating Breakdown */}
+                                            <div className="space-y-2">
+                                                {[5, 4, 3, 2, 1].map((rating) => (
+                                                    <div key={rating} className="flex items-center space-x-2">
+                                                        <span className="text-sm text-semantic-textSub w-12">
+                                                            {rating} star{rating !== 1 ? 's' : ''}
+                                                        </span>
+                                                        <div className="flex-1 bg-neutral-200 rounded-full h-2">
+                                                            <div
+                                                                className="bg-yellow-400 h-2 rounded-full"
+                                                                style={{
+                                                                    width: `${reviewStats.totalReviews > 0 
+                                                                        ? (reviewStats.breakdown[rating] / reviewStats.totalReviews) * 100 
+                                                                        : 0}%`
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-sm text-semantic-textSub w-8">
+                                                            {reviewStats.breakdown[rating] || 0}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Recent Reviews */}
+                                        <div className="border-t border-neutral-200 pt-6">
+                                            <h4 className="text-lg font-semibold text-semantic-text mb-4">Recent Reviews</h4>
+                                            <div className="space-y-6">
+                                                {recentReviews.map((review) => (
+                                                    <div key={review.id} className="border-b border-neutral-200 pb-6 last:border-b-0">
+                                                        <div className="flex items-start justify-between mb-3">
+                                                            <div className="flex items-center space-x-3">
+                                                                <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center">
+                                                                    <span className="text-brand-600 font-semibold text-sm">
+                                                                        {review.user.name.charAt(0).toUpperCase()}
+                                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-medium text-semantic-text">
+                                                                        {review.user.name}
+                                                                        {review.verified_purchase_data && (
+                                                                            <Badge variant="success" size="sm" className="ml-2">
+                                                                                Verified Purchase
+                                                                            </Badge>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <div className="flex">
+                                                                            {[...Array(5)].map((_, i) => (
+                                                                                <StarIcon
+                                                                                    key={i}
+                                                                                    className={`h-4 w-4 ${
+                                                                                        i < review.rating 
+                                                                                            ? 'text-yellow-400 fill-current' 
+                                                                                            : 'text-gray-300'
+                                                                                    }`}
+                                                                                />
+                                                                            ))}
+                                                                        </div>
+                                                                        <span className="text-sm text-semantic-textSub">
+                                                                            {new Date(review.created_at).toLocaleDateString()}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {review.title && (
+                                                            <h5 className="font-medium text-semantic-text mb-2">
+                                                                {review.title}
+                                                            </h5>
+                                                        )}
+                                                        
+                                                        <p className="text-semantic-text leading-relaxed">
+                                                            {review.comment}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            
+                                            {recentReviews.length > 0 && (
+                                                <div className="text-center mt-6">
+                                                    <Button variant="secondary">
+                                                        View All {reviewStats.totalReviews} Reviews
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <div className="text-semantic-textSub text-lg mb-4">
+                                            No reviews yet. Be the first to review this product!
+                                        </div>
+                                        {!userHasReviewed && (
+                                            <Button>
+                                                Write the First Review
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </Card>
                     </div>
@@ -343,6 +553,100 @@ export default function Show({ product }: ProductShowProps) {
                     </div>
                 </div>
             )}
+
+            {/* Review Submission Modal */}
+            <Modal
+                isOpen={isReviewModalOpen}
+                onClose={() => {
+                    setIsReviewModalOpen(false);
+                    setReviewRating(0);
+                    setHoveredRating(0);
+                    reviewForm.reset();
+                }}
+                title="Write a Review"
+                size="lg"
+            >
+                <form onSubmit={handleReviewSubmit}>
+                    <ModalBody>
+                        <div className="space-y-6">
+                            <div>
+                                <h4 className="font-medium text-semantic-text mb-2">
+                                    {product.name}
+                                </h4>
+                                <p className="text-semantic-textSub text-sm">
+                                    Share your experience with this product
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-semantic-text mb-2">
+                                    Rating *
+                                </label>
+                                {renderStarRating(reviewRating, true)}
+                                {reviewForm.errors.rating && (
+                                    <p className="text-red-600 text-sm mt-1">{reviewForm.errors.rating}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label htmlFor="review-title" className="block text-sm font-medium text-semantic-text mb-2">
+                                    Review Title *
+                                </label>
+                                <Input
+                                    id="review-title"
+                                    type="text"
+                                    value={reviewForm.data.title}
+                                    onChange={(e) => reviewForm.setData('title', e.target.value)}
+                                    placeholder="Summarize your review in one line"
+                                    className="w-full"
+                                />
+                                {reviewForm.errors.title && (
+                                    <p className="text-red-600 text-sm mt-1">{reviewForm.errors.title}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label htmlFor="review-comment" className="block text-sm font-medium text-semantic-text mb-2">
+                                    Your Review *
+                                </label>
+                                <textarea
+                                    id="review-comment"
+                                    value={reviewForm.data.comment}
+                                    onChange={(e) => reviewForm.setData('comment', e.target.value)}
+                                    placeholder="Tell others about your experience with this product..."
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-semantic-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                                />
+                                {reviewForm.errors.comment && (
+                                    <p className="text-red-600 text-sm mt-1">{reviewForm.errors.comment}</p>
+                                )}
+                            </div>
+                        </div>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                setIsReviewModalOpen(false);
+                                setReviewRating(0);
+                                setHoveredRating(0);
+                                reviewForm.reset();
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={reviewForm.processing || !reviewRating}
+                        >
+                            {reviewForm.processing ? 'Submitting...' : 'Submit Review'}
+                        </Button>
+                    </ModalFooter>
+                </form>
+            </Modal>
         </BrandedStoreLayout>
     );
 }

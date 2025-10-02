@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import BrandedStoreLayout from '@/Layouts/BrandedStoreLayout';
 import { 
@@ -73,6 +73,63 @@ interface WelcomeProps extends PageProps {
         categories: number;
         years_experience: number;
     };
+}
+
+// Newsletter Signup Form Component
+function NewsletterSignupForm() {
+    const { data, setData, post, processing, errors, reset, wasSuccessful } = useForm({
+        email: '',
+    });
+
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    // Handle successful submission
+    useEffect(() => {
+        if (wasSuccessful) {
+            reset();
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 5000); // Hide after 5 seconds
+        }
+    }, [wasSuccessful]);
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route('newsletter.subscribe'));
+    };
+
+    return (
+        <div className="max-w-md mx-auto">
+            {showSuccess && (
+                <div className="mb-4 p-4 bg-green-600 text-white rounded-lg">
+                    Thank you for subscribing! You will receive updates about our sacred products and special offers.
+                </div>
+            )}
+            
+            <form onSubmit={submit} className="flex space-x-4">
+                <input
+                    type="email"
+                    value={data.email}
+                    onChange={(e) => setData('email', e.target.value)}
+                    placeholder="Enter your email"
+                    className="flex-1 px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    disabled={processing}
+                />
+                <button
+                    type="submit"
+                    disabled={processing}
+                    className="bg-brand-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {processing ? 'Subscribing...' : 'Subscribe'}
+                </button>
+            </form>
+            
+            {errors.email && (
+                <div className="mt-2 text-red-400 text-sm">
+                    {errors.email}
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default function Welcome(props: WelcomeProps) {
@@ -606,19 +663,7 @@ export default function Welcome(props: WelcomeProps) {
                         <h2 className="text-3xl font-bold text-white mb-4">Stay Updated</h2>
                         <p className="text-gray-300 mb-8">Get the latest deals and product updates delivered to your inbox</p>
                         
-                        <form className="max-w-md mx-auto flex space-x-4">
-                            <input
-                                type="email"
-                                placeholder="Enter your email"
-                                className="flex-1 px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                            />
-                            <button
-                                type="submit"
-                                className="bg-brand-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-brand-700 transition-colors"
-                            >
-                                Subscribe
-                            </button>
-                        </form>
+                        <NewsletterSignupForm />
                     </div>
                 </div>
             </section>

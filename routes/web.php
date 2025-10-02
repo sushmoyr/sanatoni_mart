@@ -50,6 +50,26 @@ Route::delete('/cart/{shoppingCart}', [CartController::class, 'destroy'])->name(
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
 
+// Coupon routes for cart
+Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.apply-coupon');
+Route::delete('/cart/remove-coupon', [CartController::class, 'removeCoupon'])->name('cart.remove-coupon');
+
+// Flash Sales routes
+Route::get('/flash-sales', [App\Http\Controllers\FlashSaleController::class, 'index'])->name('flash-sales.index');
+Route::get('/flash-sales/{flashSale}', [App\Http\Controllers\FlashSaleController::class, 'show'])->name('flash-sales.show');
+
+// Product Review routes (API-style for AJAX)
+Route::prefix('products/{product}/reviews')->name('products.reviews.')->group(function () {
+    Route::get('/', [App\Http\Controllers\ProductReviewController::class, 'index'])->name('index');
+    Route::get('/stats', [App\Http\Controllers\ProductReviewController::class, 'stats'])->name('stats');
+    Route::post('/', [App\Http\Controllers\ProductReviewController::class, 'store'])->name('store')->middleware('auth');
+});
+
+Route::prefix('reviews')->name('reviews.')->middleware('auth')->group(function () {
+    Route::post('/{review}/vote', [App\Http\Controllers\ProductReviewController::class, 'vote'])->name('vote');
+    Route::delete('/{review}/vote', [App\Http\Controllers\ProductReviewController::class, 'removeVote'])->name('remove-vote');
+});
+
 // Checkout routes (available for both guest and authenticated users)
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.calculate-shipping');
@@ -185,6 +205,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     });
     
 });
+
+// Newsletter subscription routes
+Route::post('/newsletter/subscribe', [App\Http\Controllers\NewsletterSubscriptionController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::get('/newsletter/unsubscribe', [App\Http\Controllers\NewsletterSubscriptionController::class, 'unsubscribeForm'])->name('newsletter.unsubscribe.form');
+Route::post('/newsletter/unsubscribe', [App\Http\Controllers\NewsletterSubscriptionController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
 // Language switching routes
 Route::prefix('language')->name('language.')->group(function () {

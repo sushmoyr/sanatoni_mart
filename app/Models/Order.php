@@ -18,6 +18,7 @@ class Order extends Model
         'guest_email',
         'status',
         'subtotal',
+        'discount_amount',
         'shipping_cost',
         'total',
         'shipping_address',

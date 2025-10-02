@@ -21,22 +21,77 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // Business Overview Statistics
+        // Calculate current period data
+        $currentMonth = Carbon::now();
+        $previousMonth = Carbon::now()->subMonth();
+        
+        // Current revenue stats
+        $totalRevenue = Order::whereIn('status', ['delivered', 'shipped'])->sum('total');
+        $monthlyRevenue = Order::whereIn('status', ['delivered', 'shipped'])
+            ->whereMonth('created_at', $currentMonth->month)
+            ->whereYear('created_at', $currentMonth->year)
+            ->sum('total');
+        
+        // Previous month revenue for comparison
+        $previousMonthRevenue = Order::whereIn('status', ['delivered', 'shipped'])
+            ->whereMonth('created_at', $previousMonth->month)
+            ->whereYear('created_at', $previousMonth->year)
+            ->sum('total');
+        
+        // Calculate total revenue from previous period (up to previous month)
+        $previousTotalRevenue = Order::whereIn('status', ['delivered', 'shipped'])
+            ->where('created_at', '<', $currentMonth->startOfMonth())
+            ->sum('total');
+        
+        // Current orders stats
+        $totalOrders = Order::count();
+        $currentMonthOrders = Order::whereMonth('created_at', $currentMonth->month)
+            ->whereYear('created_at', $currentMonth->year)
+            ->count();
+        $previousMonthOrders = Order::whereMonth('created_at', $previousMonth->month)
+            ->whereYear('created_at', $previousMonth->year)
+            ->count();
+        
+        // Current pending orders
+        $pendingOrders = Order::where('status', 'pending')->count();
+        $previousMonthPendingOrders = Order::where('status', 'pending')
+            ->whereMonth('created_at', $previousMonth->month)
+            ->whereYear('created_at', $previousMonth->year)
+            ->count();
+        
+        // Products stats
+        $totalProducts = Product::count();
+        $lowStockProducts = Product::where('is_active', true)
+            ->where('manage_stock', true)
+            ->whereBetween('stock_quantity', [1, 10])
+            ->count();
+        
+        // Calculate percentage changes
+        $calculatePercentageChange = function($current, $previous) {
+            if ($previous == 0) {
+                return $current > 0 ? 100 : 0;
+            }
+            return round((($current - $previous) / $previous) * 100, 1);
+        };
+        
+        // Business Overview Statistics with trends
         $businessStats = [
-            'total_revenue' => Order::whereIn('status', ['delivered', 'shipped'])->sum('total'),
-            'monthly_revenue' => Order::whereIn('status', ['delivered', 'shipped'])
-                ->whereMonth('created_at', Carbon::now()->month)
-                ->whereYear('created_at', Carbon::now()->year)
-                ->sum('total'),
-            'total_orders' => Order::count(),
-            'pending_orders' => Order::where('status', 'pending')->count(),
-            'total_products' => Product::count(),
+            'total_revenue' => $totalRevenue,
+            'monthly_revenue' => $monthlyRevenue,
+            'total_orders' => $totalOrders,
+            'pending_orders' => $pendingOrders,
+            'total_products' => $totalProducts,
             'active_products' => Product::where('is_active', true)->count(),
             'total_categories' => Category::count(),
-            'low_stock_products' => Product::where('is_active', true)
-                ->where('manage_stock', true)
-                ->whereBetween('stock_quantity', [1, 10])
-                ->count(),
+            'low_stock_products' => $lowStockProducts,
+            
+            // Percentage changes
+            'total_revenue_change' => $calculatePercentageChange($totalRevenue, $previousTotalRevenue),
+            'monthly_revenue_change' => $calculatePercentageChange($monthlyRevenue, $previousMonthRevenue),
+            'orders_change' => $calculatePercentageChange($currentMonthOrders, $previousMonthOrders),
+            'pending_orders_change' => $calculatePercentageChange($pendingOrders, $previousMonthPendingOrders),
+            'products_change' => 0, // Products don't change frequently, can be enhanced later
+            'low_stock_change' => 0, // Can be enhanced to compare with previous period
         ];
 
         // User statistics

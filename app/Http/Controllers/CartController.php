@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\ShoppingCart;
 use App\Models\Product;
+use App\Models\Coupon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 
 class CartController extends Controller
@@ -234,11 +236,34 @@ class CartController extends Controller
             return $item->quantity * $item->product->price;
         });
 
+        $appliedCoupon = Session::get('applied_coupon');
+        $discount = 0;
+
+        if ($appliedCoupon) {
+            $coupon = Coupon::where('code', $appliedCoupon['code'])
+                ->where('status', 'active')
+                ->first();
+            
+            if ($coupon && $coupon->isValidForCart($subtotal)) {
+                $discount = $coupon->calculateDiscount($subtotal, []);
+            } else {
+                // Remove invalid coupon from session
+                Session::forget('applied_coupon');
+                $appliedCoupon = null;
+            }
+        }
+
         return [
             'itemCount' => $cartItems->sum('quantity'),
             'uniqueItems' => $cartItems->count(),
             'subtotal' => $subtotal,
-            'total' => $subtotal // Later we can add shipping, taxes, discounts
+            'discount' => $discount,
+            'total' => max(0, $subtotal - $discount),
+            'appliedCoupon' => $appliedCoupon ? [
+                'code' => $appliedCoupon['code'],
+                'discount_amount' => $discount,
+                'discount_type' => $appliedCoupon['discount_type']
+            ] : null
         ];
     }
 
@@ -265,6 +290,62 @@ class CartController extends Controller
     private function getSessionId()
     {
         return session()->getId();
+    }
+
+    /**
+     * Apply coupon to cart
+     */
+    public function applyCoupon(Request $request)
+    {
+        $request->validate([
+            'coupon_code' => 'required|string|max:50'
+        ]);
+
+        $couponCode = strtoupper(trim($request->coupon_code));
+        
+        // Find the coupon
+        $coupon = Coupon::where('code', $couponCode)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$coupon) {
+            return back()->withErrors([
+                'coupon_code' => 'Invalid coupon code.'
+            ]);
+        }
+
+        // Get current cart total for validation
+        $cartItems = $this->getCartItems();
+        $subtotal = $cartItems->sum(function ($item) {
+            return $item->quantity * $item->product->price;
+        });
+
+        // Validate coupon for current cart
+        $validationResult = $coupon->validateForCart($cartItems->toArray(), $subtotal);
+        
+        if (!$validationResult['valid']) {
+            return back()->withErrors([
+                'coupon_code' => $validationResult['message']
+            ]);
+        }
+
+        // Store coupon in session
+        Session::put('applied_coupon', [
+            'code' => $coupon->code,
+            'discount_type' => $coupon->type,
+            'discount_value' => $coupon->value
+        ]);
+
+        return back()->with('success', 'Coupon applied successfully!');
+    }
+
+    /**
+     * Remove coupon from cart
+     */
+    public function removeCoupon()
+    {
+        Session::forget('applied_coupon');
+        return back()->with('success', 'Coupon removed successfully!');
     }
 
     /**

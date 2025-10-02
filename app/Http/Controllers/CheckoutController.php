@@ -9,9 +9,12 @@ use App\Models\ShoppingCart;
 use App\Models\ShippingZone;
 use App\Models\CustomerAddress;
 use App\Models\Product;
+use App\Models\Coupon;
+use App\Models\CouponUsage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -74,7 +77,7 @@ class CheckoutController extends Controller
             'shippingZone' => $shippingZone,
             'shippingCost' => $shippingZone->shipping_cost,
             'deliveryTimeRange' => $shippingZone->delivery_time_range,
-            'total' => $cartSummary['subtotal'] + $shippingZone->shipping_cost,
+            'total' => $cartSummary['total'] + $shippingZone->shipping_cost,
         ]);
     }
 
@@ -143,8 +146,10 @@ class CheckoutController extends Controller
             // Calculate order totals
             $cartSummary = $this->getCartSummary($cartItems);
             $subtotal = $cartSummary['subtotal'];
+            $discount = $cartSummary['discount'];
+            $subtotalAfterDiscount = $cartSummary['total'];
             $shippingCost = $shippingZone->shipping_cost;
-            $total = $subtotal + $shippingCost;
+            $total = $subtotalAfterDiscount + $shippingCost;
 
             // Prepare addresses
             $shippingAddress = $validated['shipping_address'];
@@ -159,6 +164,7 @@ class CheckoutController extends Controller
                 'guest_email' => auth()->check() ? null : $validated['customer_email'],
                 'status' => Order::STATUS_PENDING,
                 'subtotal' => $subtotal,
+                'discount_amount' => $discount,
                 'shipping_cost' => $shippingCost,
                 'total' => $total,
                 'shipping_address' => $shippingAddress,
@@ -196,6 +202,28 @@ class CheckoutController extends Controller
                 // Update product stock (if not unlimited)
                 if (!$product->has_unlimited_stock) {
                     $product->decrement('stock_quantity', $cartItem->quantity);
+                }
+            }
+
+            // Handle coupon usage if applied
+            $appliedCoupon = Session::get('applied_coupon');
+            if ($appliedCoupon && $discount > 0) {
+                $coupon = Coupon::where('code', $appliedCoupon['code'])->first();
+                if ($coupon) {
+                    // Record coupon usage
+                    CouponUsage::create([
+                        'coupon_id' => $coupon->id,
+                        'order_id' => $order->id,
+                        'user_id' => auth()->id(),
+                        'customer_email' => auth()->check() ? auth()->user()->email : $validated['customer_email'],
+                        'discount_amount' => $discount,
+                    ]);
+                    
+                    // Increment coupon usage count
+                    $coupon->increment('used_count');
+                    
+                    // Remove coupon from session
+                    Session::forget('applied_coupon');
                 }
             }
 
@@ -263,10 +291,34 @@ class CheckoutController extends Controller
             return $item->quantity * $item->product->price;
         });
 
+        $appliedCoupon = Session::get('applied_coupon');
+        $discount = 0;
+
+        if ($appliedCoupon) {
+            $coupon = Coupon::where('code', $appliedCoupon['code'])
+                ->where('status', 'active')
+                ->first();
+            
+            if ($coupon && $coupon->isValidForCart($subtotal)) {
+                $discount = $coupon->calculateDiscount($subtotal, []);
+            } else {
+                // Remove invalid coupon from session
+                Session::forget('applied_coupon');
+                $appliedCoupon = null;
+            }
+        }
+
         return [
             'itemCount' => $cartItems->sum('quantity'),
             'uniqueItems' => $cartItems->count(),
             'subtotal' => $subtotal,
+            'discount' => $discount,
+            'total' => max(0, $subtotal - $discount),
+            'appliedCoupon' => $appliedCoupon ? [
+                'code' => $appliedCoupon['code'],
+                'discount_amount' => $discount,
+                'discount_type' => $appliedCoupon['discount_type']
+            ] : null
         ];
     }
 

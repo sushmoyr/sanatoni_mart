@@ -75,8 +75,15 @@ class ProductController extends Controller
         // Track product view
         $this->trackProductView($product, $request);
 
-        // Load product with all relationships
+        // Load product with all relationships including review statistics
         $product->load(['category', 'images']);
+        
+        // Load recent approved reviews
+        $recentReviews = $product->approvedReviews()
+            ->with(['user'])
+            ->latest()
+            ->take(5)
+            ->get();
 
         // Get related products from the same category
         $relatedProducts = Product::with(['images'])
@@ -89,6 +96,13 @@ class ProductController extends Controller
         return Inertia::render('Products/Show', [
             'product' => $product,
             'relatedProducts' => $relatedProducts,
+            'reviewStats' => [
+                'averageRating' => $product->average_rating,
+                'totalReviews' => $product->reviews_count,
+                'breakdown' => $product->reviews_breakdown,
+            ],
+            'recentReviews' => $recentReviews,
+            'userHasReviewed' => auth()->check() ? $product->reviews()->where('user_id', auth()->id())->exists() : false,
         ]);
     }
 

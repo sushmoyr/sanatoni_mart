@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\FlashSaleController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\NewsletterController;
 use App\Http\Controllers\Admin\SliderController;
+use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -78,6 +79,14 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
     Route::post('newsletters/{newsletter}/duplicate', [NewsletterController::class, 'duplicate'])->name('newsletters.duplicate');
     Route::get('newsletters/{newsletter}/preview', [NewsletterController::class, 'preview'])->name('newsletters.preview');
     Route::get('newsletters/analytics/subscribers', [NewsletterController::class, 'subscriberAnalytics'])->name('newsletters.subscriber-analytics');
+    
+    // Product Review Management - Admin and Manager
+    Route::resource('reviews', App\Http\Controllers\Admin\ProductReviewController::class)->only(['index', 'show', 'destroy']);
+    Route::post('reviews/{review}/approve', [App\Http\Controllers\Admin\ProductReviewController::class, 'approve'])->name('reviews.approve');
+    Route::post('reviews/{review}/reject', [App\Http\Controllers\Admin\ProductReviewController::class, 'reject'])->name('reviews.reject');
+    Route::post('reviews/bulk-approve', [App\Http\Controllers\Admin\ProductReviewController::class, 'bulkApprove'])->name('reviews.bulk-approve');
+    Route::post('reviews/bulk-reject', [App\Http\Controllers\Admin\ProductReviewController::class, 'bulkReject'])->name('reviews.bulk-reject');
+    Route::get('reviews/statistics', [App\Http\Controllers\Admin\ProductReviewController::class, 'statistics'])->name('reviews.statistics');
     
     // User Management - Admin only
     Route::middleware('role:admin')->group(function () {

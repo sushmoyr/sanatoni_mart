@@ -56,6 +56,16 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class)->where('status', 'approved');
+    }
+
     public function mainImage()
     {
         return $this->images()->where('is_main', true)->first();
@@ -89,6 +99,34 @@ class Product extends Model
     public function getFormattedDisplayPriceAttribute(): string
     {
         return '₹' . number_format($this->display_price, 2);
+    }
+
+    /**
+     * Get average rating for this product
+     */
+    public function getAverageRatingAttribute(): float
+    {
+        return $this->approvedReviews()->avg('rating') ?? 0.0;
+    }
+
+    /**
+     * Get total reviews count for this product
+     */
+    public function getReviewsCountAttribute(): int
+    {
+        return $this->approvedReviews()->count();
+    }
+
+    /**
+     * Get reviews breakdown by rating (1-5 stars)
+     */
+    public function getReviewsBreakdownAttribute(): array
+    {
+        $breakdown = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $breakdown[$i] = $this->approvedReviews()->where('rating', $i)->count();
+        }
+        return $breakdown;
     }
 
     /**

@@ -285,4 +285,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+
+    /**
+     * Product reviews written by this user
+     */
+    public function productReviews()
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    /**
+     * Review helpful votes made by this user
+     */
+    public function reviewHelpfulVotes()
+    {
+        return $this->hasMany(ReviewHelpfulVote::class);
+    }
 }

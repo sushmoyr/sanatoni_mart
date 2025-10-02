@@ -29,6 +29,12 @@ interface BusinessStats {
     active_products: number;
     total_categories: number;
     low_stock_products: number;
+    total_revenue_change: number;
+    monthly_revenue_change: number;
+    orders_change: number;
+    pending_orders_change: number;
+    products_change: number;
+    low_stock_change: number;
 }
 
 interface UserStats {
@@ -112,6 +118,17 @@ export default function Dashboard({
         }
     };
 
+    const formatPercentageChange = (value: number) => {
+        if (value === 0) return null;
+        const sign = value > 0 ? '+' : '';
+        return `${sign}${value}%`;
+    };
+
+    const getChangeType = (value: number) => {
+        if (value === 0) return null;
+        return value > 0 ? 'positive' : 'negative';
+    };
+
     const businessStatCards = [
         {
             title: 'Total Revenue',
@@ -119,8 +136,8 @@ export default function Dashboard({
             icon: CurrencyDollarIcon,
             bgColor: 'bg-green-100',
             iconColor: 'text-green-600',
-            change: '+12.5%',
-            changeType: 'positive'
+            change: formatPercentageChange(businessStats.total_revenue_change),
+            changeType: getChangeType(businessStats.total_revenue_change)
         },
         {
             title: 'Monthly Revenue',
@@ -128,8 +145,8 @@ export default function Dashboard({
             icon: ArrowTrendingUpIcon,
             bgColor: 'bg-blue-100',
             iconColor: 'text-blue-600',
-            change: '+8.2%',
-            changeType: 'positive'
+            change: formatPercentageChange(businessStats.monthly_revenue_change),
+            changeType: getChangeType(businessStats.monthly_revenue_change)
         },
         {
             title: 'Total Orders',
@@ -137,8 +154,8 @@ export default function Dashboard({
             icon: ShoppingBagIcon,
             bgColor: 'bg-purple-100',
             iconColor: 'text-purple-600',
-            change: '+5.7%',
-            changeType: 'positive'
+            change: formatPercentageChange(businessStats.orders_change),
+            changeType: getChangeType(businessStats.orders_change)
         },
         {
             title: 'Pending Orders',
@@ -146,8 +163,8 @@ export default function Dashboard({
             icon: ClockIcon,
             bgColor: 'bg-yellow-100',
             iconColor: 'text-yellow-600',
-            change: '-2.1%',
-            changeType: 'negative'
+            change: formatPercentageChange(businessStats.pending_orders_change),
+            changeType: getChangeType(businessStats.pending_orders_change)
         },
         {
             title: 'Total Products',
@@ -155,8 +172,8 @@ export default function Dashboard({
             icon: CubeIcon,
             bgColor: 'bg-indigo-100',
             iconColor: 'text-indigo-600',
-            change: '+3.8%',
-            changeType: 'positive'
+            change: formatPercentageChange(businessStats.products_change),
+            changeType: getChangeType(businessStats.products_change)
         },
         {
             title: 'Low Stock Alerts',
@@ -164,8 +181,8 @@ export default function Dashboard({
             icon: ExclamationTriangleIcon,
             bgColor: 'bg-red-100',
             iconColor: 'text-red-600',
-            change: '+15%',
-            changeType: 'negative'
+            change: formatPercentageChange(businessStats.low_stock_change),
+            changeType: getChangeType(businessStats.low_stock_change)
         }
     ];
 

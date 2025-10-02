@@ -39,6 +39,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             items: [
                 { name: 'Sliders', href: route('admin.sliders.index'), icon: '🖼️', permission: 'view_products' },
                 { name: 'Coupons', href: route('admin.coupons.index'), icon: '🎫', permission: 'view_products' },
+                { name: 'Reviews', href: route('admin.reviews.index'), icon: '⭐', permission: 'view_products' },
                 { name: 'Newsletters', href: route('admin.newsletters.index'), icon: '📧', permission: 'view_products' },
             ]
         },

@@ -1,9 +1,9 @@
-import React from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import BrandedStoreLayout from '@/Layouts/BrandedStoreLayout';
 import { ShoppingCart, PageProps } from '@/types';
 import { Button, Card, Badge } from '@/Components/ui';
-import { TrashIcon, MinusIcon, PlusIcon, ShoppingBagIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, MinusIcon, PlusIcon, ShoppingBagIcon, ShieldCheckIcon, TagIcon } from '@heroicons/react/24/outline';
 
 interface CartIndexProps extends PageProps {
     cartItems: ShoppingCart[];
@@ -11,11 +11,23 @@ interface CartIndexProps extends PageProps {
         itemCount: number;
         uniqueItems: number;
         subtotal: number;
+        discount: number;
         total: number;
+        appliedCoupon?: {
+            code: string;
+            discount_amount: number;
+            discount_type: 'percentage' | 'fixed';
+        };
     };
 }
 
 export default function CartIndex({ auth, cartItems, cartSummary }: CartIndexProps) {
+    const [couponCollapsed, setCouponCollapsed] = useState(true);
+    
+    const { data: couponData, setData: setCouponData, post: applyCoupon, processing: applyingCoupon, errors: couponErrors } = useForm({
+        coupon_code: ''
+    });
+
     const updateQuantity = (cartId: number, newQuantity: number) => {
         if (newQuantity <= 0) {
             removeItem(cartId);
@@ -41,6 +53,22 @@ export default function CartIndex({ auth, cartItems, cartSummary }: CartIndexPro
                 preserveState: true
             });
         }
+    };
+
+    const handleApplyCoupon = () => {
+        applyCoupon(route('cart.apply-coupon'), {
+            preserveState: true,
+            onSuccess: () => {
+                setCouponData('coupon_code', '');
+                setCouponCollapsed(true);
+            }
+        });
+    };
+
+    const removeCoupon = () => {
+        router.delete(route('cart.remove-coupon'), {
+            preserveState: true
+        });
     };
 
     return (
@@ -178,6 +206,26 @@ export default function CartIndex({ auth, cartItems, cartSummary }: CartIndexPro
                                             <span className="text-semantic-textSub">Delivery</span>
                                             <span className="text-success-600 font-medium">Free</span>
                                         </div>
+
+                                        {cartSummary.appliedCoupon && (
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-success-600 flex items-center">
+                                                    <TagIcon className="h-3 w-3 mr-1" />
+                                                    Coupon ({cartSummary.appliedCoupon.code})
+                                                </span>
+                                                <div className="flex items-center">
+                                                    <span className="text-success-600 font-medium font-tnum">
+                                                        -৳{cartSummary.appliedCoupon.discount_amount.toFixed(2)}
+                                                    </span>
+                                                    <button
+                                                        onClick={removeCoupon}
+                                                        className="ml-2 text-xs text-red-500 hover:text-red-600"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                         
                                         <div className="border-t border-semantic-border pt-4">
                                             <div className="flex justify-between text-lg font-bold">
@@ -200,6 +248,45 @@ export default function CartIndex({ auth, cartItems, cartSummary }: CartIndexPro
                                             </Link>
                                         </Button>
                                     </div>
+
+                                    {/* Coupon Section */}
+                                    {!cartSummary.appliedCoupon && (
+                                        <div className="mt-6">
+                                            <button
+                                                onClick={() => setCouponCollapsed(!couponCollapsed)}
+                                                className="flex items-center text-sm text-brand-600 hover:text-brand-700 font-medium"
+                                            >
+                                                <TagIcon className="h-4 w-4 mr-1" />
+                                                Have a coupon code?
+                                            </button>
+                                            
+                                            {!couponCollapsed && (
+                                                <div className="mt-3 space-y-3">
+                                                    <div>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Enter coupon code"
+                                                            value={couponData.coupon_code}
+                                                            onChange={(e) => setCouponData('coupon_code', e.target.value)}
+                                                            className="w-full px-3 py-2 border border-semantic-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                                                        />
+                                                        {couponErrors.coupon_code && (
+                                                            <p className="mt-1 text-xs text-red-500">{couponErrors.coupon_code}</p>
+                                                        )}
+                                                    </div>
+                                                    <Button
+                                                        onClick={handleApplyCoupon}
+                                                        disabled={applyingCoupon || !couponData.coupon_code.trim()}
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        className="w-full"
+                                                    >
+                                                        {applyingCoupon ? 'Applying...' : 'Apply Coupon'}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {/* Security Notice */}
                                     <div className="mt-6 pt-6 border-t border-semantic-border">

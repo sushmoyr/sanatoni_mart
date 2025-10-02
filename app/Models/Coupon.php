@@ -221,4 +221,120 @@ class Coupon extends Model
                   ->orWhereRaw('used_count < usage_limit');
             });
     }
+
+    /**
+     * Check if coupon is valid for cart
+     */
+    public function isValidForCart(float $cartTotal): bool
+    {
+        // Check if coupon is active
+        if ($this->status !== 'active') {
+            return false;
+        }
+
+        // Check date validity
+        if ($this->valid_from && Carbon::now()->lt($this->valid_from)) {
+            return false;
+        }
+        
+        if ($this->valid_until && Carbon::now()->gt($this->valid_until)) {
+            return false;
+        }
+
+        // Check usage limit
+        if ($this->usage_limit && $this->used_count >= $this->usage_limit) {
+            return false;
+        }
+
+        // Check minimum order amount
+        if ($this->minimum_order_amount && $cartTotal < $this->minimum_order_amount) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate coupon for specific cart items
+     */
+    public function validateForCart(array $cartItems, float $cartTotal): array
+    {
+        // Basic validation
+        if (!$this->isValidForCart($cartTotal)) {
+            return [
+                'valid' => false,
+                'message' => $this->getInvalidMessage($cartTotal)
+            ];
+        }
+
+        // Check product/category restrictions
+        if (!empty($this->product_ids) || !empty($this->category_ids)) {
+            $hasValidItems = false;
+            
+            foreach ($cartItems as $item) {
+                if (!empty($this->product_ids) && in_array($item['product']['id'], $this->product_ids)) {
+                    $hasValidItems = true;
+                    break;
+                }
+                
+                if (!empty($this->category_ids) && in_array($item['product']['category_id'], $this->category_ids)) {
+                    $hasValidItems = true;
+                    break;
+                }
+            }
+            
+            if (!$hasValidItems) {
+                return [
+                    'valid' => false,
+                    'message' => 'This coupon is not applicable to items in your cart.'
+                ];
+            }
+        }
+
+        // Check per customer usage limit (if user is authenticated)
+        if (auth()->check() && $this->per_customer_limit) {
+            $customerUsage = $this->usages()
+                ->where('user_id', auth()->id())
+                ->count();
+                
+            if ($customerUsage >= $this->per_customer_limit) {
+                return [
+                    'valid' => false,
+                    'message' => 'You have already used this coupon the maximum number of times.'
+                ];
+            }
+        }
+
+        return ['valid' => true];
+    }
+
+
+
+    /**
+     * Get invalid message for coupon
+     */
+    private function getInvalidMessage(float $cartTotal): string
+    {
+        if ($this->status !== 'active') {
+            return 'This coupon is no longer active.';
+        }
+        
+        if ($this->valid_from && Carbon::now()->lt($this->valid_from)) {
+            return 'This coupon is not yet valid.';
+        }
+        
+        if ($this->valid_until && Carbon::now()->gt($this->valid_until)) {
+            return 'This coupon has expired.';
+        }
+        
+        if ($this->usage_limit && $this->used_count >= $this->usage_limit) {
+            return 'This coupon has reached its usage limit.';
+        }
+        
+        if ($this->minimum_order_amount && $cartTotal < $this->minimum_order_amount) {
+            return "Minimum order amount of ৳{$this->minimum_order_amount} required for this coupon.";
+        }
+        
+        return 'This coupon is not valid.';
+    }
 }
