@@ -58,7 +58,7 @@ class ProductController extends Controller
         $products = $query->paginate(12)->withQueryString();
 
         // Get categories for filtering
-        $categories = Category::where('status', 'active')->get();
+        $categories = Category::active()->get();
 
         return Inertia::render('Products/Index', [
             'products' => $products,

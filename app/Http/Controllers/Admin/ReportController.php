@@ -64,7 +64,7 @@ class ReportController extends Controller
                       ->where('stock_quantity', '<=', 0);
             }
         ])
-        ->where('active', true)
+        ->where('is_active', true)
         ->orderBy('name')
         ->get();
 

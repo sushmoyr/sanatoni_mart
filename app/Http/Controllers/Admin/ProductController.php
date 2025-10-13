@@ -89,7 +89,7 @@ class ProductController extends Controller
         }
 
         $products = $query->paginate(10)->withQueryString();
-        $categories = Category::where('active', true)->orderBy('name')->get();
+        $categories = Category::active()->orderBy('name')->get();
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,

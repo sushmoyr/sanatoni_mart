@@ -73,9 +73,7 @@ class HomeController extends Controller
 
         // Flash Sale Products
         $flashSaleProducts = [];
-        $activeFlashSale = FlashSale::where('is_active', true)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+        $activeFlashSale = FlashSale::active()
             ->with(['products.images', 'products.category'])
             ->first();
 
